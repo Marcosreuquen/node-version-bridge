@@ -32,6 +32,7 @@ source "${NVB_ROOT}/lib/manager.sh"
 # --- Commands ---
 
 nvb_cmd_refresh() {
+  # shellcheck disable=SC2119
   nvb_resolve_version || true
   local resolved_version="${NVB_RESOLVED_VERSION:-}"
   local resolved_source="${NVB_RESOLVED_SOURCE:-}"
@@ -65,6 +66,7 @@ nvb_cmd_refresh() {
 }
 
 nvb_cmd_current() {
+  # shellcheck disable=SC2119
   nvb_resolve_version || true
   local resolved_version="${NVB_RESOLVED_VERSION:-}"
   local resolved_source="${NVB_RESOLVED_SOURCE:-}"
