@@ -6,7 +6,7 @@
 # Sets: NVB_RESOLVED_VERSION, NVB_RESOLVED_SOURCE
 nvb_resolve_version() {
   local dir="${1:-$PWD}"
-  local priority_str="${NVB_PRIORITY:-.nvmrc,.node-version,.tool-versions}"
+  local priority_str="${NVB_PRIORITY:-.nvmrc,.node-version,.tool-versions,package.json}"
 
   NVB_RESOLVED_VERSION=""
   NVB_RESOLVED_SOURCE=""

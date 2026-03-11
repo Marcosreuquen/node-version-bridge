@@ -2,7 +2,7 @@
 
 ## Project Summary
 
-**node-version-bridge (nvb)** is a shell-based tool that detects the Node.js version declared in a project's configuration files (`.nvmrc`, `.node-version`, `.tool-versions`) and automatically applies it via the user's preferred version manager. It eliminates the need to maintain duplicate version files across different tooling ecosystems.
+**node-version-bridge (nvb)** is a shell-based tool that detects the Node.js version declared in a project's configuration files (`.nvmrc`, `.node-version`, `.tool-versions`, `package.json`) and automatically applies it via the user's preferred version manager. It eliminates the need to maintain duplicate version files across different tooling ecosystems.
 
 ## Architecture
 
@@ -15,6 +15,7 @@ lib/
   resolve.sh         ← Applies priority rules, selects target version.
   cache.sh           ← Avoids redundant switches (file-based cache).
   manager.sh         ← Detects version manager, generates eval-able commands.
+  alias.sh           ← Resolves Node aliases (lts/*, node, stable) via nodejs.org API.
 hooks/
   nvb.zsh            ← Zsh shell hook (chpwd-based).
   nvb.bash           ← Bash shell hook (PROMPT_COMMAND-based).
@@ -23,6 +24,7 @@ test/
   test_parse.sh      ← Parse tests for all file formats.
   test_detect.sh     ← Directory walk and file detection tests.
   test_resolve.sh    ← Priority resolution and cache tests.
+  test_integration.sh ← Multi-directory, nested override, and fallback tests.
   run.sh             ← Test runner (executes all test_*.sh files).
 ```
 
@@ -32,9 +34,9 @@ test/
 
 2. **Manager-agnostic**: Supports nvm, fnm, mise, asdf, and n via adapter pattern in `manager.sh`. Manager is auto-detected or set via `NVB_MANAGER`.
 
-3. **Version validation**: Parsed versions must match `^[0-9]+(\.[0-9]+)?(\.[0-9]+)?$`. Aliases (`lts/*`, `node`, `stable`) are rejected in v1.
+3. **Version validation**: Parsed versions must match `^[0-9]+(\.[0-9]+)?(\.[0-9]+)?$`. Aliases (`lts/*`, `node`, `stable`) are resolved to concrete versions via the nodejs.org API (since v0.2.0).
 
-4. **Priority system**: Default order is `.nvmrc` → `.node-version` → `.tool-versions`. Configurable via `NVB_PRIORITY` env var.
+4. **Priority system**: Default order is `.nvmrc` → `.node-version` → `.tool-versions` → `package.json`. Configurable via `NVB_PRIORITY` env var.
 
 5. **Cache**: File at `$XDG_CACHE_HOME/node-version-bridge/state` stores last `(cwd, version, source)`. Hooks skip work when unchanged.
 
@@ -44,8 +46,9 @@ test/
 |---|---|---|
 | `NVB_MANAGER` | Force version manager | auto-detect |
 | `NVB_LOG_LEVEL` | Verbosity (error/warn/info/debug) | `error` |
-| `NVB_PRIORITY` | File priority (comma-separated) | `.nvmrc,.node-version,.tool-versions` |
+| `NVB_PRIORITY` | File priority (comma-separated) | `.nvmrc,.node-version,.tool-versions,package.json` |
 | `NVB_CACHE_DIR` | Cache directory | `$XDG_CACHE_HOME/node-version-bridge` |
+| `NVB_ALIAS_CACHE_TTL` | Alias cache TTL in seconds | `3600` |
 
 ## CLI Commands
 

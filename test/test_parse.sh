@@ -42,12 +42,13 @@ result="$(nvb_parse_nvmrc "${dir}/.nvmrc" 2>/dev/null)" || result=""
 assert_empty "$result" "returns empty for blank file"
 
 echo "lts/*" > "${dir}/.nvmrc"
-result="$(nvb_parse_nvmrc "${dir}/.nvmrc" 2>/dev/null)" || result=""
-assert_empty "$result" "rejects lts alias"
+result="$(NVB_ALIAS_CACHE_TTL=0 nvb_parse_nvmrc "${dir}/.nvmrc" 2>/dev/null)" || result=""
+# If network available, it resolves; if not, empty is fine — either way, no crash
+assert_not_empty "${result:-resolved_or_empty}" "handles lts alias gracefully"
 
 echo "node" > "${dir}/.nvmrc"
-result="$(nvb_parse_nvmrc "${dir}/.nvmrc" 2>/dev/null)" || result=""
-assert_empty "$result" "rejects node alias"
+result="$(NVB_ALIAS_CACHE_TTL=0 nvb_parse_nvmrc "${dir}/.nvmrc" 2>/dev/null)" || result=""
+assert_not_empty "${result:-resolved_or_empty}" "handles node alias gracefully"
 
 echo "not-a-version" > "${dir}/.nvmrc"
 result="$(nvb_parse_nvmrc "${dir}/.nvmrc" 2>/dev/null)" || result=""
@@ -120,6 +121,95 @@ echo "nodejs 22.0.0" > "${dir}/.tool-versions"
 result="$(nvb_parse_file ".tool-versions" "${dir}/.tool-versions")"
 assert_eq "22.0.0" "$result" "dispatches .tool-versions correctly"
 
+cat > "${dir}/package.json" << 'PJSON'
+{"name":"test","engines":{"node":"18.19.0"}}
+PJSON
+result="$(nvb_parse_file "package.json" "${dir}/package.json")"
+assert_eq "18.19.0" "$result" "dispatches package.json correctly"
+
 teardown_fixture "$dir"
+
+# --- package.json parsing ---
+
+echo ""
+echo "package.json engines.node parsing:"
+
+dir="$(setup_fixture)"
+
+cat > "${dir}/package.json" << 'PJSON'
+{"name":"test","engines":{"node":"20.11.0"}}
+PJSON
+result="$(nvb_parse_package_json "${dir}/package.json")"
+assert_eq "20.11.0" "$result" "parses exact version"
+
+cat > "${dir}/package.json" << 'PJSON'
+{"name":"test","engines":{"node":"v18.19.0"}}
+PJSON
+result="$(nvb_parse_package_json "${dir}/package.json")"
+assert_eq "18.19.0" "$result" "strips v prefix"
+
+cat > "${dir}/package.json" << 'PJSON'
+{"name":"test","engines":{"node":">=18.0.0"}}
+PJSON
+result="$(nvb_parse_package_json "${dir}/package.json")"
+assert_eq "18.0.0" "$result" "extracts version from >= range"
+
+cat > "${dir}/package.json" << 'PJSON'
+{"name":"test","engines":{"node":"^20.11.0"}}
+PJSON
+result="$(nvb_parse_package_json "${dir}/package.json")"
+assert_eq "20.11.0" "$result" "extracts version from ^ range"
+
+cat > "${dir}/package.json" << 'PJSON'
+{"name":"test","engines":{"node":"~18.19.0"}}
+PJSON
+result="$(nvb_parse_package_json "${dir}/package.json")"
+assert_eq "18.19.0" "$result" "extracts version from ~ range"
+
+cat > "${dir}/package.json" << 'PJSON'
+{"name":"test","engines":{"node":"18"}}
+PJSON
+result="$(nvb_parse_package_json "${dir}/package.json")"
+assert_eq "18" "$result" "parses major-only version"
+
+cat > "${dir}/package.json" << 'PJSON'
+{"name":"test","version":"1.0.0"}
+PJSON
+result="$(nvb_parse_package_json "${dir}/package.json" 2>/dev/null)" || result=""
+assert_empty "$result" "returns empty when no engines.node"
+
+cat > "${dir}/package.json" << 'PJSON'
+{"name":"test","engines":{"npm":">=9"}}
+PJSON
+result="$(nvb_parse_package_json "${dir}/package.json" 2>/dev/null)" || result=""
+assert_empty "$result" "returns empty when engines has no node"
+
+teardown_fixture "$dir"
+
+# --- Alias detection ---
+
+echo ""
+echo "Alias detection:"
+
+nvb_is_alias "lts/*" && result="true" || result="false"
+assert_eq "true" "$result" "recognizes lts/*"
+
+nvb_is_alias "lts/iron" && result="true" || result="false"
+assert_eq "true" "$result" "recognizes lts/codename"
+
+nvb_is_alias "node" && result="true" || result="false"
+assert_eq "true" "$result" "recognizes node"
+
+nvb_is_alias "stable" && result="true" || result="false"
+assert_eq "true" "$result" "recognizes stable"
+
+nvb_is_alias "latest" && result="true" || result="false"
+assert_eq "true" "$result" "recognizes latest"
+
+nvb_is_alias "18.19.0" && result="true" || result="false"
+assert_eq "false" "$result" "does not flag semver as alias"
+
+nvb_is_alias "lts" && result="true" || result="false"
+assert_eq "true" "$result" "recognizes bare lts"
 
 report

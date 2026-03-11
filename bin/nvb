@@ -5,7 +5,7 @@
 
 set -euo pipefail
 
-NVB_VERSION="0.1.0"
+NVB_VERSION="0.2.0"
 
 # Resolve script location (handles symlinks on macOS/Linux)
 _nvb_resolve_root() {
@@ -23,6 +23,7 @@ NVB_ROOT="$(_nvb_resolve_root)"
 # Source libraries
 source "${NVB_ROOT}/lib/log.sh"
 source "${NVB_ROOT}/lib/detect.sh"
+source "${NVB_ROOT}/lib/alias.sh"
 source "${NVB_ROOT}/lib/parse.sh"
 source "${NVB_ROOT}/lib/resolve.sh"
 source "${NVB_ROOT}/lib/cache.sh"
@@ -48,7 +49,9 @@ nvb_cmd_refresh() {
 
   local manager
   manager="$(nvb_detect_manager)" || {
-    nvb_log error "No supported version manager found. Install one of: nvm, fnm, mise, asdf, n"
+    echo "echo '[nvb] No supported version manager found.' >&2" 
+    echo "echo '[nvb] Install one of: nvm, fnm, mise, asdf, n' >&2"
+    echo "echo '[nvb] See: https://github.com/marcosreuquen/node-version-bridge#supported-managers' >&2"
     return 1
   }
 
@@ -106,7 +109,7 @@ nvb_cmd_doctor() {
 
   # Check version files
   echo "Version files (from $PWD):"
-  local priority_str="${NVB_PRIORITY:-.nvmrc,.node-version,.tool-versions}"
+  local priority_str="${NVB_PRIORITY:-.nvmrc,.node-version,.tool-versions,package.json}"
   IFS=',' read -ra priorities <<< "$priority_str"
 
   for f in "${priorities[@]}"; do
@@ -153,6 +156,7 @@ Commands:
   version     Show nvb version
   help        Show this help
 
+Supported version files: .nvmrc, .node-version, .tool-versions, package.json (engines.node)
 Supported managers: nvm, fnm, mise, asdf, n
 
 Shell integration (add to your shell config):

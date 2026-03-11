@@ -25,6 +25,9 @@ By default, in this priority order:
 1. `.nvmrc`
 2. `.node-version`
 3. `.tool-versions`
+4. `package.json` (`engines.node`)
+
+Aliases like `lts/*`, `lts/iron`, `node`, `stable`, and `latest` are automatically resolved to concrete versions via the nodejs.org API.
 
 ## Installation
 
@@ -109,8 +112,9 @@ Everything is configured via environment variables:
 |---|---|---|
 | `NVB_MANAGER` | Force a specific version manager | auto-detect |
 | `NVB_LOG_LEVEL` | Log level: error, warn, info, debug | `error` |
-| `NVB_PRIORITY` | File priority (comma-separated) | `.nvmrc,.node-version,.tool-versions` |
+| `NVB_PRIORITY` | File priority (comma-separated) | `.nvmrc,.node-version,.tool-versions,package.json` |
 | `NVB_CACHE_DIR` | Cache directory | `$XDG_CACHE_HOME/node-version-bridge` |
+| `NVB_ALIAS_CACHE_TTL` | Alias cache TTL in seconds | `3600` |
 
 ### Example: change priority
 
@@ -150,4 +154,4 @@ bash test/run.sh
 
 ## Status
 
-Functional MVP (v0.1.0) — automatic detection, resolution, and version switching with 5 supported managers.
+v0.2.0 — alias resolution, `package.json` support, integration tests, and CI. See [Changelog](./CHANGELOG.md).

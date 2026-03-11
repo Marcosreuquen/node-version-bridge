@@ -12,6 +12,7 @@ export NVB_LOG_LEVEL="${NVB_LOG_LEVEL:-error}"
 # Source all libraries
 source "${NVB_ROOT}/lib/log.sh"
 source "${NVB_ROOT}/lib/detect.sh"
+source "${NVB_ROOT}/lib/alias.sh"
 source "${NVB_ROOT}/lib/parse.sh"
 source "${NVB_ROOT}/lib/resolve.sh"
 source "${NVB_ROOT}/lib/cache.sh"

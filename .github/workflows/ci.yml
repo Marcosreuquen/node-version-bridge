@@ -1,0 +1,51 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    name: Tests (bash ${{ matrix.bash-version }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            bash-version: "default"
+          - os: macos-latest
+            bash-version: "default"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Show bash version
+        run: bash --version
+
+      - name: Run tests
+        run: bash test/run.sh
+
+      - name: CLI smoke test
+        run: |
+          bash bin/nvb version
+          bash bin/nvb help
+
+  shellcheck:
+    name: ShellCheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install ShellCheck
+        run: sudo apt-get install -y shellcheck
+
+      - name: Run ShellCheck on lib/
+        run: shellcheck -s bash lib/*.sh
+
+      - name: Run ShellCheck on bin/nvb
+        run: shellcheck -s bash bin/nvb
+
+      - name: Run ShellCheck on hooks/
+        run: shellcheck -s bash hooks/nvb.bash

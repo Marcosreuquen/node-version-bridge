@@ -11,6 +11,7 @@ nvb_parse_file() {
     .nvmrc)         nvb_parse_nvmrc "$filepath" ;;
     .node-version)  nvb_parse_node_version "$filepath" ;;
     .tool-versions) nvb_parse_tool_versions "$filepath" ;;
+    package.json)   nvb_parse_package_json "$filepath" ;;
     *)
       nvb_log warn "Unknown file format: ${filename}"
       return 1
@@ -30,13 +31,16 @@ nvb_parse_nvmrc() {
   content="${content#v}"
   content="${content#V}"
 
-  # Aliases not supported in v1
-  case "$content" in
-    lts/*|lts|node|stable|latest)
-      nvb_log warn "Alias '${content}' in ${filepath} is not supported yet"
+  # Resolve aliases (lts/*, node, stable, etc.)
+  if nvb_is_alias "$content"; then
+    local resolved
+    resolved="$(nvb_resolve_alias "$content")" || {
+      nvb_log warn "Could not resolve alias '${content}' in ${filepath} (network unavailable?)"
       return 1
-      ;;
-  esac
+    }
+    echo "$resolved"
+    return 0
+  fi
 
   # Accept partial or full semver: 18, 18.19, 18.19.0
   if [[ "$content" =~ ^[0-9]+(\.[0-9]+)?(\.[0-9]+)?$ ]]; then
@@ -71,5 +75,47 @@ nvb_parse_tool_versions() {
   fi
 
   nvb_log warn "Could not parse nodejs version from ${filepath}: '${version}'"
+  return 1
+}
+
+# Parse package.json — extract engines.node field
+nvb_parse_package_json() {
+  local filepath="$1"
+
+  [[ -f "$filepath" ]] || return 1
+
+  local engines_node
+  # Extract "engines":{..."node":"<value>"...} using grep/sed (no jq dependency)
+  engines_node="$(grep -o '"engines"[[:space:]]*:[[:space:]]*{[^}]*}' "$filepath" 2>/dev/null \
+    | grep -o '"node"[[:space:]]*:[[:space:]]*"[^"]*"' \
+    | head -1 \
+    | sed 's/"node"[[:space:]]*:[[:space:]]*"\([^"]*\)"/\1/')"
+
+  [[ -z "$engines_node" ]] && return 1
+
+  nvb_log debug "Found engines.node: '${engines_node}' in ${filepath}"
+
+  # Handle exact versions: "18.19.0", "v18.19.0", "18"
+  local clean="$engines_node"
+  clean="${clean#v}"
+  clean="${clean#V}"
+
+  if [[ "$clean" =~ ^[0-9]+(\.[0-9]+)?(\.[0-9]+)?$ ]]; then
+    echo "$clean"
+    return 0
+  fi
+
+  # Handle semver ranges: extract the base version
+  # ">=18.0.0", "^18.19.0", "~18.19.0", ">=18"
+  local base
+  base="$(echo "$clean" | sed 's/^[^0-9]*//' | grep -oE '^[0-9]+(\.[0-9]+)?(\.[0-9]+)?')"
+
+  if [[ -n "$base" ]]; then
+    nvb_log info "Interpreted engines.node '${engines_node}' as minimum version ${base}"
+    echo "$base"
+    return 0
+  fi
+
+  nvb_log warn "Could not parse engines.node from ${filepath}: '${engines_node}'"
   return 1
 }

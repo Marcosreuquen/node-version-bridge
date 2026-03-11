@@ -5,6 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.2.0] - 2025-07-18
+
+### Added
+
+- **Alias resolution**: `lts/*`, `lts/<codename>`, `node`, `stable`, `latest` aliases are now resolved to concrete versions via the nodejs.org API. Results are cached locally (TTL configurable via `NVB_ALIAS_CACHE_TTL`, default 1h).
+- **package.json support**: Detects Node version from `engines.node` field. Handles exact versions, `v`-prefix, and semver range prefixes (`>=`, `^`, `~`).
+- **Improved error messages**: Actionable suggestions with URLs when no version file or no manager is found.
+- **Integration tests**: 15 new tests covering multi-directory navigation, nested project overrides, fallback chains, cache integration, and empty tree scenarios.
+- **GitHub Actions CI**: Runs full test suite and ShellCheck on push/PR for both Ubuntu and macOS.
+- **New module** `lib/alias.sh` for alias detection and resolution.
+
+### Changed
+
+- Default `NVB_PRIORITY` now includes `package.json`: `.nvmrc,.node-version,.tool-versions,package.json`.
+- Version bumped to 0.2.0.
+- Total test count: 71 (up from 40).
+
 ## [0.1.0] - 2026-03-11
 
 ### Added
