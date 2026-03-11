@@ -21,8 +21,8 @@ nvb_resolve_version() {
     local version
     version="$(nvb_parse_file "$filename" "$filepath")" || continue
 
-    NVB_RESOLVED_VERSION="$version"
-    NVB_RESOLVED_SOURCE="$filepath"
+    export NVB_RESOLVED_VERSION="$version"
+    export NVB_RESOLVED_SOURCE="$filepath"
     nvb_log debug "Resolved ${version} from ${filepath}"
     return 0
   done

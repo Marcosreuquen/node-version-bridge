@@ -8,15 +8,11 @@ on:
 
 jobs:
   test:
-    name: Tests (bash ${{ matrix.bash-version }})
+    name: Tests (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        include:
-          - os: ubuntu-latest
-            bash-version: "default"
-          - os: macos-latest
-            bash-version: "default"
+        os: [ubuntu-latest, macos-latest]
 
     steps:
       - uses: actions/checkout@v4
