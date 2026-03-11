@@ -1,16 +1,16 @@
 # node-version-bridge
 
-Puente de versiones para Node.js — detecta automáticamente la versión declarada en tu proyecto y la aplica usando tu gestor de versiones preferido.
+Automatically detects the Node.js version declared in your project and applies it using your preferred version manager.
 
-## Problema
+## Problem
 
-Muchos proyectos Node ya tienen archivos como `.nvmrc` o `.node-version`, pero si usás un gestor de versiones diferente al del equipo (asdf, nvm, fnm, mise, n), terminás manteniendo archivos duplicados o ejecutando comandos manuales cada vez que cambiás de proyecto.
+Many Node projects already have files like `.nvmrc` or `.node-version`, but if you use a different version manager than the rest of your team (asdf, nvm, fnm, mise, n), you end up maintaining duplicate files or running manual commands every time you switch projects.
 
-## Solución
+## Solution
 
-`nvb` lee los archivos de versión que ya existen en el proyecto y aplica la versión correcta automáticamente al entrar al directorio, sin importar qué gestor de versiones uses.
+`nvb` reads the version files that already exist in your project and automatically applies the correct Node version when you enter the directory — regardless of which version manager you use.
 
-## Gestores soportados
+## Supported managers
 
 - **nvm** — `nvm use <version>`
 - **fnm** — `fnm use <version>`
@@ -18,17 +18,17 @@ Muchos proyectos Node ya tienen archivos como `.nvmrc` o `.node-version`, pero s
 - **asdf** — `export ASDF_NODEJS_VERSION=<version>`
 - **n** — `n <version>`
 
-## Archivos de versión detectados
+## Detected version files
 
-Por defecto, en este orden de prioridad:
+By default, in this priority order:
 
 1. `.nvmrc`
 2. `.node-version`
 3. `.tool-versions`
 
-## Instalación
+## Installation
 
-### Opción rápida (recomendada)
+### Quick install (recommended)
 
 ```bash
 git clone https://github.com/marcosreuquen/node-version-bridge.git
@@ -36,93 +36,93 @@ cd node-version-bridge
 bash install.sh
 ```
 
-El script:
-1. Copia `nvb` a `~/.local/share/nvb/`
-2. Agrega automáticamente el hook a tu `.zshrc` o `.bashrc`
+The script will:
+1. Copy `nvb` to `~/.local/share/nvb/`
+2. Automatically add the shell hook to your `.zshrc` or `.bashrc`
 
-Después reiniciá tu shell o ejecutá `source ~/.zshrc` (o `~/.bashrc`).
+Then restart your shell or run `source ~/.zshrc` (or `~/.bashrc`).
 
-### Opción manual
+### Manual install
 
-Si preferís controlar la instalación:
+If you prefer full control over the installation:
 
 ```bash
 git clone https://github.com/marcosreuquen/node-version-bridge.git
 ```
 
-Luego agregá el hook a tu shell:
+Then add the hook to your shell config:
 
-**Zsh** — en `~/.zshrc`:
-
-```bash
-source /ruta/a/node-version-bridge/hooks/nvb.zsh
-```
-
-**Bash** — en `~/.bashrc`:
+**Zsh** — add to `~/.zshrc`:
 
 ```bash
-source /ruta/a/node-version-bridge/hooks/nvb.bash
+source /path/to/node-version-bridge/hooks/nvb.zsh
 ```
 
-### Verificar instalación
+**Bash** — add to `~/.bashrc`:
+
+```bash
+source /path/to/node-version-bridge/hooks/nvb.bash
+```
+
+### Verify installation
 
 ```bash
 nvb doctor
 ```
 
-## Desinstalación
+## Uninstall
 
-### Con el script
+### With the script
 
-Desde el directorio del repositorio:
+From the repository directory:
 
 ```bash
 bash uninstall.sh
 ```
 
-Esto elimina los archivos instalados, el hook de tu shell config y el caché.
+This removes installed files, the shell hook from your config, and the cache.
 
 ### Manual
 
-1. Borrá la línea `source ...nvb.zsh` (o `nvb.bash`) de tu `.zshrc`/`.bashrc`
-2. Eliminá el directorio de instalación: `rm -rf ~/.local/share/nvb`
-3. Opcional — eliminá el caché: `rm -rf ~/.cache/node-version-bridge`
+1. Remove the `source ...nvb.zsh` (or `nvb.bash`) line from your `.zshrc`/`.bashrc`
+2. Delete the install directory: `rm -rf ~/.local/share/nvb`
+3. Optional — delete the cache: `rm -rf ~/.cache/node-version-bridge`
 
-## Uso manual
+## Usage
 
 ```bash
-# Ver versión resuelta vs activa
+# Show resolved version vs active version
 nvb current
 
-# Diagnóstico completo
+# Full diagnostics
 nvb doctor
 
-# Ver ayuda
+# Show help
 nvb help
 ```
 
-## Configuración
+## Configuration
 
-Todo se configura con variables de entorno:
+Everything is configured via environment variables:
 
-| Variable | Descripción | Default |
+| Variable | Description | Default |
 |---|---|---|
-| `NVB_MANAGER` | Forzar un gestor específico | auto-detect |
-| `NVB_LOG_LEVEL` | Nivel de log: error, warn, info, debug | `error` |
-| `NVB_PRIORITY` | Prioridad de archivos (separado por comas) | `.nvmrc,.node-version,.tool-versions` |
-| `NVB_CACHE_DIR` | Directorio de caché | `$XDG_CACHE_HOME/node-version-bridge` |
+| `NVB_MANAGER` | Force a specific version manager | auto-detect |
+| `NVB_LOG_LEVEL` | Log level: error, warn, info, debug | `error` |
+| `NVB_PRIORITY` | File priority (comma-separated) | `.nvmrc,.node-version,.tool-versions` |
+| `NVB_CACHE_DIR` | Cache directory | `$XDG_CACHE_HOME/node-version-bridge` |
 
-### Ejemplo: cambiar prioridad
+### Example: change priority
 
 ```bash
-# Priorizar .tool-versions sobre .nvmrc
+# Prioritize .tool-versions over .nvmrc
 export NVB_PRIORITY=".tool-versions,.nvmrc,.node-version"
 ```
 
-### Ejemplo: forzar gestor
+### Example: force a manager
 
 ```bash
-# Siempre usar fnm aunque nvm esté disponible
+# Always use fnm even if nvm is available
 export NVB_MANAGER="fnm"
 ```
 
@@ -132,22 +132,22 @@ export NVB_MANAGER="fnm"
 bash test/run.sh
 ```
 
-## Resultado esperado
+## Expected outcome
 
-- Menos fricción diaria al cambiar entre proyectos.
-- Cero necesidad de commitear archivos específicos de tu gestor cuando ya existe `.nvmrc`/`.node-version`.
-- Funciona con cualquier gestor de versiones popular.
+- Less daily friction when switching between projects.
+- No need to commit manager-specific files when `.nvmrc`/`.node-version` already exists.
+- Works with any popular Node version manager.
 
 ---
 
-## Documentación
+## Documentation
 
-- [Concepto del producto](./docs/concept.md)
-- [Diseño técnico](./docs/technical-design.md)
+- [Product concept](./docs/concept.md)
+- [Technical design](./docs/technical-design.md)
 - [Roadmap](./docs/roadmap.md)
-- [Plan de implementación](./docs/implementation-plan.md)
+- [Implementation plan](./docs/implementation-plan.md)
 - [Changelog](./CHANGELOG.md)
 
-## Estado
+## Status
 
-MVP funcional (v0.1.0) — detección, resolución y aplicación automática con 5 gestores soportados.
+Functional MVP (v0.1.0) — automatic detection, resolution, and version switching with 5 supported managers.
