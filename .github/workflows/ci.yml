@@ -41,7 +41,7 @@ jobs:
         run: shellcheck -s bash lib/*.sh
 
       - name: Run ShellCheck on bin/nvb
-        run: shellcheck -s bash bin/nvb
+        run: shellcheck -x -s bash bin/nvb
 
       - name: Run ShellCheck on hooks/
         run: shellcheck -s bash hooks/nvb.bash
