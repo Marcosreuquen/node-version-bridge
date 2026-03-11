@@ -1,0 +1,57 @@
+site_name: node-version-bridge
+site_url: https://marcosreuquen.github.io/node-version-bridge/
+site_description: Automatically detect and apply the right Node.js version using any version manager.
+site_author: Marcos Reuquen
+repo_url: https://github.com/marcosreuquen/node-version-bridge
+repo_name: marcosreuquen/node-version-bridge
+
+docs_dir: site-docs
+
+theme:
+  name: material
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: green
+      accent: teal
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: green
+      accent: teal
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.sections
+    - navigation.expand
+    - content.code.copy
+    - search.highlight
+
+markdown_extensions:
+  - admonition
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - tables
+  - toc:
+      permalink: true
+
+nav:
+  - Home: index.md
+  - Getting Started:
+    - Installation: getting-started/installation.md
+    - Configuration: getting-started/configuration.md
+  - Reference:
+    - CLI Commands: reference/cli.md
+    - Supported Managers: reference/managers.md
+    - Version Files: reference/version-files.md
+    - Environment Variables: reference/env-vars.md
+  - Development:
+    - Contributing: development/contributing.md
+    - Architecture: development/architecture.md
+    - Changelog: development/changelog.md

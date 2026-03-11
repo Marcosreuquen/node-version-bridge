@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0] - 2026-03-11
+
+### Added
+
+- **Documentation site**: Full MkDocs Material site with GitHub Pages deployment. Covers installation, configuration, CLI reference, supported managers, version files, environment variables, architecture, and contributing.
+- **MIT License**.
+- **CONTRIBUTING.md**: Guide for contributors with code style, testing, and PR guidelines.
+- **GitHub Actions workflow** for automatic docs deployment on push to `main`.
+
 ## [0.2.1] - 2026-03-11
 
 ### Fixed

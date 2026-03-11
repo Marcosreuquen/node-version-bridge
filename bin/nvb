@@ -5,7 +5,7 @@
 
 set -euo pipefail
 
-NVB_VERSION="0.2.1"
+NVB_VERSION="0.3.0"
 
 # Resolve script location (handles symlinks on macOS/Linux)
 _nvb_resolve_root() {

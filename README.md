@@ -154,4 +154,6 @@ bash test/run.sh
 
 ## Status
 
-v0.2.0 — alias resolution, `package.json` support, integration tests, and CI. See [Changelog](./CHANGELOG.md).
+v0.3.0 — documentation site, MIT license, and contributing guide. See [Changelog](./CHANGELOG.md).
+
+**[Full Documentation](https://marcosreuquen.github.io/node-version-bridge/)**
