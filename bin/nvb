@@ -1,0 +1,183 @@
+#!/usr/bin/env bash
+# node-version-bridge — CLI entrypoint
+# Detects Node.js version from project files and generates commands
+# to apply it via the user's preferred version manager.
+
+set -euo pipefail
+
+NVB_VERSION="0.1.0"
+
+# Resolve script location (handles symlinks on macOS/Linux)
+_nvb_resolve_root() {
+  local source="${BASH_SOURCE[0]}"
+  while [[ -L "$source" ]]; do
+    local dir
+    dir="$(cd -P "$(dirname "$source")" && pwd)"
+    source="$(readlink "$source")"
+    [[ "$source" != /* ]] && source="${dir}/${source}"
+  done
+  cd -P "$(dirname "$source")/.." && pwd
+}
+NVB_ROOT="$(_nvb_resolve_root)"
+
+# Source libraries
+source "${NVB_ROOT}/lib/log.sh"
+source "${NVB_ROOT}/lib/detect.sh"
+source "${NVB_ROOT}/lib/parse.sh"
+source "${NVB_ROOT}/lib/resolve.sh"
+source "${NVB_ROOT}/lib/cache.sh"
+source "${NVB_ROOT}/lib/manager.sh"
+
+# --- Commands ---
+
+nvb_cmd_refresh() {
+  nvb_resolve_version || true
+  local resolved_version="${NVB_RESOLVED_VERSION:-}"
+  local resolved_source="${NVB_RESOLVED_SOURCE:-}"
+
+  if [[ -z "$resolved_version" ]]; then
+    nvb_log debug "No version file found, nothing to do"
+    return 0
+  fi
+
+  # Check cache — skip if nothing changed
+  if nvb_cache_is_current "$PWD" "$resolved_version" "$resolved_source"; then
+    nvb_log debug "Cache hit: ${resolved_version} from ${resolved_source}"
+    return 0
+  fi
+
+  local manager
+  manager="$(nvb_detect_manager)" || {
+    nvb_log error "No supported version manager found. Install one of: nvm, fnm, mise, asdf, n"
+    return 1
+  }
+
+  nvb_log info "Switching to Node ${resolved_version} (from ${resolved_source}) via ${manager}"
+
+  # Output eval-able command for the shell hook
+  nvb_adapter_apply_cmd "$manager" "$resolved_version"
+
+  # Update cache
+  nvb_cache_update "$PWD" "$resolved_version" "$resolved_source"
+}
+
+nvb_cmd_current() {
+  nvb_resolve_version || true
+  local resolved_version="${NVB_RESOLVED_VERSION:-}"
+  local resolved_source="${NVB_RESOLVED_SOURCE:-}"
+
+  local active_version
+  active_version="$(node --version 2>/dev/null | sed 's/^v//')" || active_version="(not found)"
+
+  local manager
+  manager="$(nvb_detect_manager 2>/dev/null)" || manager="(none detected)"
+
+  echo "node-version-bridge v${NVB_VERSION}"
+  echo ""
+  echo "  Active Node:    ${active_version}"
+  echo "  Resolved:       ${resolved_version:-(none)}"
+  echo "  Source:         ${resolved_source:-(none)}"
+  echo "  Manager:        ${manager}"
+}
+
+nvb_cmd_doctor() {
+  echo "node-version-bridge v${NVB_VERSION} — diagnostics"
+  echo ""
+
+  # Check version managers
+  echo "Version managers:"
+  local managers=("nvm" "fnm" "mise" "asdf" "n")
+  local active_manager
+  active_manager="$(nvb_detect_manager 2>/dev/null)" || active_manager=""
+
+  for m in "${managers[@]}"; do
+    if nvb_adapter_available "$m"; then
+      if [[ "$m" == "$active_manager" ]]; then
+        echo "  ● ${m} (active)"
+      else
+        echo "  ✓ ${m}"
+      fi
+    else
+      echo "  ✗ ${m}"
+    fi
+  done
+
+  echo ""
+
+  # Check version files
+  echo "Version files (from $PWD):"
+  local priority_str="${NVB_PRIORITY:-.nvmrc,.node-version,.tool-versions}"
+  IFS=',' read -ra priorities <<< "$priority_str"
+
+  for f in "${priorities[@]}"; do
+    f="$(echo "$f" | xargs)"
+    local found
+    found="$(nvb_detect_file "$f" 2>/dev/null)" || found=""
+    if [[ -n "$found" ]]; then
+      local ver
+      ver="$(nvb_parse_file "$f" "$found" 2>/dev/null)" || ver="(parse error)"
+      echo "  ✓ ${found} → ${ver}"
+    else
+      echo "  ✗ ${f} (not found)"
+    fi
+  done
+
+  echo ""
+
+  # Configuration
+  echo "Configuration:"
+  echo "  NVB_MANAGER:    ${NVB_MANAGER:-(auto-detect)}"
+  echo "  NVB_LOG_LEVEL:  ${NVB_LOG_LEVEL:-error}"
+  echo "  NVB_PRIORITY:   ${NVB_PRIORITY:-.nvmrc,.node-version,.tool-versions}"
+  echo "  NVB_CACHE_DIR:  ${NVB_CACHE_DIR:-${XDG_CACHE_HOME:-$HOME/.cache}/node-version-bridge}"
+
+  echo ""
+  local node_ver
+  node_ver="$(node --version 2>/dev/null)" || node_ver="(not found)"
+  echo "Active Node: ${node_ver}"
+}
+
+nvb_cmd_help() {
+  cat <<EOF
+node-version-bridge v${NVB_VERSION}
+
+Automatically applies the Node.js version declared in your project
+using your preferred version manager.
+
+Usage: nvb <command> [options]
+
+Commands:
+  refresh     Detect version and output shell commands to apply it (for eval)
+  current     Show resolved version, source, and active Node version
+  doctor      Check available managers and configuration
+  version     Show nvb version
+  help        Show this help
+
+Supported managers: nvm, fnm, mise, asdf, n
+
+Shell integration (add to your shell config):
+  Zsh:   source <path-to-nvb>/hooks/nvb.zsh
+  Bash:  source <path-to-nvb>/hooks/nvb.bash
+
+Environment variables:
+  NVB_MANAGER     Force a specific version manager (nvm, fnm, mise, asdf, n)
+  NVB_LOG_LEVEL   Log verbosity: error, warn, info, debug (default: error)
+  NVB_PRIORITY    Comma-separated file priority (default: .nvmrc,.node-version,.tool-versions)
+  NVB_CACHE_DIR   Override cache directory
+EOF
+}
+
+# --- Main dispatch ---
+
+case "${1:-help}" in
+  refresh)     nvb_cmd_refresh ;;
+  current)     nvb_cmd_current ;;
+  doctor)      nvb_cmd_doctor ;;
+  version|-v)  echo "nvb ${NVB_VERSION}" ;;
+  help|--help|-h) nvb_cmd_help ;;
+  *)
+    nvb_log error "Unknown command: $1"
+    nvb_cmd_help >&2
+    exit 1
+    ;;
+esac
