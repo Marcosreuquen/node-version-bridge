@@ -22,6 +22,7 @@ nvb is a pure bash tool with a layered architecture. Each layer has a single res
 │  resolve.sh → Apply priority rules     │
 │  cache.sh   → Skip redundant switches  │
 │  manager.sh → Generate apply commands  │
+│  config.sh  → Config file & CLI mgmt   │
 │  log.sh     → Structured logging       │
 └─────────────────────────────────────────┘
 ```
@@ -35,8 +36,9 @@ nvb is a pure bash tool with a layered architecture. Each layer has a single res
 5. **Alias resolution** — if the version is an alias (`lts/*`, `node`), resolve via nodejs.org API
 6. **Priority resolution** — select the highest-priority valid version
 7. **Cache check** — if `(cwd, version, source)` matches cache, skip
-8. **Manager command** — generate eval-able command for the user's version manager
-9. **Cache update** — store new state
+8. **Auto-install** — if `NVB_AUTO_INSTALL=true`, emit install command for missing versions
+9. **Manager command** — generate eval-able command for the user's version manager
+10. **Cache update** — store new state
 
 ## Key Design Decisions
 
@@ -56,7 +58,7 @@ Adding a new manager means implementing these three functions.
 
 ### No side effects
 
-nvb never modifies project files, never installs Node versions automatically, and never writes to the repository directory. It only reads version files and outputs commands.
+nvb never modifies project files and never writes to the repository directory. Auto-installation of Node versions is opt-in via `NVB_AUTO_INSTALL`. It only reads version files and outputs commands.
 
 ## Module Reference
 
@@ -68,4 +70,5 @@ nvb never modifies project files, never installs Node versions automatically, an
 | `resolve.sh` | `nvb_resolve_version` | Apply priority, set result globals |
 | `cache.sh` | `nvb_cache_is_current` | Check if switch is needed |
 | `manager.sh` | `nvb_adapter_apply_cmd` | Generate eval-able command |
+| `config.sh` | `nvb_config_load` | Load config file, manage settings |
 | `log.sh` | `nvb_log` | Log to stderr at configured level |

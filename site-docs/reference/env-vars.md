@@ -2,6 +2,8 @@
 
 Complete reference of all environment variables used by nvb.
 
+All variables can also be set in the [config file](../getting-started/configuration.md#config-file) (`~/.config/nvb/config`). Environment variables always take precedence over config file values.
+
 ## `NVB_MANAGER`
 
 Force a specific version manager instead of auto-detection.
@@ -49,6 +51,23 @@ Directory where nvb stores its state cache.
 
 ```bash
 export NVB_CACHE_DIR="$HOME/.nvb-cache"
+```
+
+## `NVB_AUTO_INSTALL`
+
+When set to `true`, nvb will automatically install a missing Node version before switching to it. The install command depends on the detected version manager.
+
+- **Values**: `true`, `false`
+- **Default**: `false`
+
+```bash
+export NVB_AUTO_INSTALL="true"
+```
+
+Or via config:
+
+```bash
+nvb config set NVB_AUTO_INSTALL true
 ```
 
 ## `NVB_ALIAS_CACHE_TTL`

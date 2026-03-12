@@ -5,7 +5,7 @@
 
 set -euo pipefail
 
-NVB_VERSION="0.3.0"
+NVB_VERSION="0.4.0"
 
 # Resolve script location (handles symlinks on macOS/Linux)
 _nvb_resolve_root() {
@@ -22,12 +22,16 @@ NVB_ROOT="$(_nvb_resolve_root)"
 
 # Source libraries
 source "${NVB_ROOT}/lib/log.sh"
+source "${NVB_ROOT}/lib/config.sh"
 source "${NVB_ROOT}/lib/detect.sh"
 source "${NVB_ROOT}/lib/alias.sh"
 source "${NVB_ROOT}/lib/parse.sh"
 source "${NVB_ROOT}/lib/resolve.sh"
 source "${NVB_ROOT}/lib/cache.sh"
 source "${NVB_ROOT}/lib/manager.sh"
+
+# Load configuration file (env vars take precedence)
+nvb_config_load
 
 # --- Commands ---
 
@@ -50,13 +54,21 @@ nvb_cmd_refresh() {
 
   local manager
   manager="$(nvb_detect_manager)" || {
-    echo "echo '[nvb] No supported version manager found.' >&2" 
+    echo "echo '[nvb] No supported version manager found.' >&2"
     echo "echo '[nvb] Install one of: nvm, fnm, mise, asdf, n' >&2"
     echo "echo '[nvb] See: https://github.com/marcosreuquen/node-version-bridge#supported-managers' >&2"
     return 1
   }
 
   nvb_log info "Switching to Node ${resolved_version} (from ${resolved_source}) via ${manager}"
+
+  # Auto-install if enabled
+  local auto_install
+  auto_install="$(nvb_config_get NVB_AUTO_INSTALL false)"
+  if [[ "$auto_install" == "true" ]]; then
+    nvb_log debug "Auto-install enabled, emitting install command"
+    nvb_adapter_install_cmd "$manager" "$resolved_version"
+  fi
 
   # Output eval-able command for the shell hook
   nvb_adapter_apply_cmd "$manager" "$resolved_version"
@@ -131,15 +143,69 @@ nvb_cmd_doctor() {
 
   # Configuration
   echo "Configuration:"
-  echo "  NVB_MANAGER:    ${NVB_MANAGER:-(auto-detect)}"
-  echo "  NVB_LOG_LEVEL:  ${NVB_LOG_LEVEL:-error}"
-  echo "  NVB_PRIORITY:   ${NVB_PRIORITY:-.nvmrc,.node-version,.tool-versions}"
-  echo "  NVB_CACHE_DIR:  ${NVB_CACHE_DIR:-${XDG_CACHE_HOME:-$HOME/.cache}/node-version-bridge}"
+  echo "  NVB_MANAGER:         ${NVB_MANAGER:-(auto-detect)}"
+  echo "  NVB_LOG_LEVEL:       ${NVB_LOG_LEVEL:-error}"
+  echo "  NVB_PRIORITY:        ${NVB_PRIORITY:-.nvmrc,.node-version,.tool-versions,package.json}"
+  echo "  NVB_CACHE_DIR:       ${NVB_CACHE_DIR:-${XDG_CACHE_HOME:-$HOME/.cache}/node-version-bridge}"
+  echo "  NVB_AUTO_INSTALL:    $(nvb_config_get NVB_AUTO_INSTALL false)"
+  echo "  NVB_ALIAS_CACHE_TTL: ${NVB_ALIAS_CACHE_TTL:-3600}"
+  echo "  Config file:         $(nvb_config_file)"
 
   echo ""
   local node_ver
   node_ver="$(node --version 2>/dev/null)" || node_ver="(not found)"
   echo "Active Node: ${node_ver}"
+}
+
+nvb_cmd_config() {
+  local subcmd="${1:-list}"
+  shift 2>/dev/null || true
+
+  case "$subcmd" in
+    list|ls)
+      nvb_config_list
+      ;;
+    get)
+      local key="${1:-}"
+      if [[ -z "$key" ]]; then
+        echo "Usage: nvb config get <KEY>" >&2
+        return 1
+      fi
+      nvb_config_get "$key"
+      ;;
+    set)
+      local key="${1:-}"
+      local value="${2:-}"
+      if [[ -z "$key" || -z "$value" ]]; then
+        echo "Usage: nvb config set <KEY> <VALUE>" >&2
+        return 1
+      fi
+      nvb_config_set "$key" "$value"
+      echo "Set ${key}=${value} in $(nvb_config_file)"
+      ;;
+    unset)
+      local key="${1:-}"
+      if [[ -z "$key" ]]; then
+        echo "Usage: nvb config unset <KEY>" >&2
+        return 1
+      fi
+      nvb_config_unset "$key"
+      echo "Removed ${key} from $(nvb_config_file)"
+      ;;
+    path)
+      nvb_config_file
+      ;;
+    *)
+      echo "Usage: nvb config <list|get|set|unset|path>" >&2
+      echo "" >&2
+      echo "  list          Show all config values and their sources" >&2
+      echo "  get <KEY>     Get a config value" >&2
+      echo "  set <KEY> <VALUE>  Set a config value" >&2
+      echo "  unset <KEY>   Remove a config value" >&2
+      echo "  path          Show config file path" >&2
+      return 1
+      ;;
+  esac
 }
 
 nvb_cmd_help() {
@@ -155,8 +221,16 @@ Commands:
   refresh     Detect version and output shell commands to apply it (for eval)
   current     Show resolved version, source, and active Node version
   doctor      Check available managers and configuration
+  config      Manage configuration (list, get, set, unset, path)
   version     Show nvb version
   help        Show this help
+
+Config examples:
+  nvb config list                          Show all configuration
+  nvb config set NVB_AUTO_INSTALL true     Enable auto-install
+  nvb config set NVB_MANAGER fnm           Force fnm as manager
+  nvb config set NVB_LOG_LEVEL debug       Enable debug logging
+  nvb config unset NVB_MANAGER             Remove manager override
 
 Supported version files: .nvmrc, .node-version, .tool-versions, package.json (engines.node)
 Supported managers: nvm, fnm, mise, asdf, n
@@ -166,10 +240,14 @@ Shell integration (add to your shell config):
   Bash:  source <path-to-nvb>/hooks/nvb.bash
 
 Environment variables:
-  NVB_MANAGER     Force a specific version manager (nvm, fnm, mise, asdf, n)
-  NVB_LOG_LEVEL   Log verbosity: error, warn, info, debug (default: error)
-  NVB_PRIORITY    Comma-separated file priority (default: .nvmrc,.node-version,.tool-versions)
-  NVB_CACHE_DIR   Override cache directory
+  NVB_MANAGER          Force a specific version manager (nvm, fnm, mise, asdf, n)
+  NVB_LOG_LEVEL        Log verbosity: error, warn, info, debug (default: error)
+  NVB_PRIORITY         Comma-separated file priority (default: .nvmrc,.node-version,.tool-versions,package.json)
+  NVB_CACHE_DIR        Override cache directory
+  NVB_AUTO_INSTALL     Auto-install missing versions: true/false (default: false)
+  NVB_ALIAS_CACHE_TTL  Alias cache TTL in seconds (default: 3600)
+
+Configuration file: $(nvb_config_file)
 EOF
 }
 
@@ -179,6 +257,7 @@ case "${1:-help}" in
   refresh)     nvb_cmd_refresh ;;
   current)     nvb_cmd_current ;;
   doctor)      nvb_cmd_doctor ;;
+  config)      shift; nvb_cmd_config "$@" ;;
   version|-v)  echo "nvb ${NVB_VERSION}" ;;
   help|--help|-h) nvb_cmd_help ;;
   *)

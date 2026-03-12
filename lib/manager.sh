@@ -64,3 +64,31 @@ nvb_adapter_apply_cmd() {
       ;;
   esac
 }
+
+# Output eval-able shell command to install a Node version
+nvb_adapter_install_cmd() {
+  local manager="$1"
+  local version="$2"
+
+  case "$manager" in
+    nvm)
+      echo "nvm install '${version}' >/dev/null 2>&1"
+      ;;
+    fnm)
+      echo "fnm install '${version}' --log-level quiet 2>/dev/null"
+      ;;
+    mise)
+      echo "mise install node@'${version}' >/dev/null 2>&1"
+      ;;
+    asdf)
+      echo "asdf install nodejs '${version}' >/dev/null 2>&1"
+      ;;
+    n)
+      echo "n '${version}' >/dev/null 2>&1"
+      ;;
+    *)
+      nvb_log error "Unknown manager: ${manager}"
+      return 1
+      ;;
+  esac
+}

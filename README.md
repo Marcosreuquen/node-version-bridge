@@ -100,13 +100,40 @@ nvb current
 # Full diagnostics
 nvb doctor
 
+# Manage configuration
+nvb config list
+nvb config set NVB_AUTO_INSTALL true
+
 # Show help
 nvb help
 ```
 
 ## Configuration
 
-Everything is configured via environment variables:
+Configuration can be set via environment variables or a config file at `~/.config/nvb/config` (or `$XDG_CONFIG_HOME/nvb/config`). Environment variables always take precedence over the config file.
+
+### Config file
+
+Create `~/.config/nvb/config` (or use `nvb config set`):
+
+```ini
+NVB_MANAGER=fnm
+NVB_LOG_LEVEL=info
+NVB_AUTO_INSTALL=true
+```
+
+### Manage config from the CLI
+
+```bash
+nvb config list                          # Show all config values and sources
+nvb config set NVB_AUTO_INSTALL true     # Enable auto-install
+nvb config set NVB_MANAGER fnm           # Force fnm
+nvb config get NVB_LOG_LEVEL             # Read a value
+nvb config unset NVB_MANAGER             # Remove a key
+nvb config path                          # Show config file path
+```
+
+### Environment variables
 
 | Variable | Description | Default |
 |---|---|---|
@@ -114,21 +141,8 @@ Everything is configured via environment variables:
 | `NVB_LOG_LEVEL` | Log level: error, warn, info, debug | `error` |
 | `NVB_PRIORITY` | File priority (comma-separated) | `.nvmrc,.node-version,.tool-versions,package.json` |
 | `NVB_CACHE_DIR` | Cache directory | `$XDG_CACHE_HOME/node-version-bridge` |
+| `NVB_AUTO_INSTALL` | Auto-install missing Node versions: true/false | `false` |
 | `NVB_ALIAS_CACHE_TTL` | Alias cache TTL in seconds | `3600` |
-
-### Example: change priority
-
-```bash
-# Prioritize .tool-versions over .nvmrc
-export NVB_PRIORITY=".tool-versions,.nvmrc,.node-version"
-```
-
-### Example: force a manager
-
-```bash
-# Always use fnm even if nvm is available
-export NVB_MANAGER="fnm"
-```
 
 ## Tests
 
@@ -154,6 +168,6 @@ bash test/run.sh
 
 ## Status
 
-v0.3.0 — documentation site, MIT license, and contributing guide. See [Changelog](./CHANGELOG.md).
+v0.4.0 — config file support, auto-install, and CLI config management. See [Changelog](./CHANGELOG.md).
 
 **[Full Documentation](https://marcosreuquen.github.io/node-version-bridge/)**

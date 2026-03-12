@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.0] - 2026-03-11
+
+### Added
+
+- **Configuration file support**: Load settings from `~/.config/nvb/config` (or `$XDG_CONFIG_HOME/nvb/config`). Key=value format with environment variable override. New module `lib/config.sh`.
+- **CLI config management**: New `nvb config` command with subcommands: `list`, `get`, `set`, `unset`, `path`. Manage configuration directly from the terminal.
+- **Auto-installation**: When `NVB_AUTO_INSTALL=true`, nvb automatically installs missing Node versions via the detected manager before switching. Controlled via config file or env var.
+- **New env var** `NVB_AUTO_INSTALL`: Enable/disable automatic installation of missing Node versions (default: `false`).
+- **Install commands per manager**: `nvb_adapter_install_cmd()` in `manager.sh` generates eval-able install commands for each supported manager.
+
+### Changed
+
+- `nvb doctor` now displays `NVB_AUTO_INSTALL` status and config file path.
+- `nvb help` updated with config command documentation and `NVB_AUTO_INSTALL` reference.
+- Version bumped to 0.4.0.
+
 ## [0.3.0] - 2026-03-11
 
 ### Added
@@ -21,7 +37,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Export `NVB_RESOLVED_VERSION` and `NVB_RESOLVED_SOURCE` in `resolve.sh` to fix ShellCheck SC2034 warning.
 - Fix duplicate CI job names by using OS in matrix instead of bash version label.
 
-## [0.2.0] - 2025-07-18
+## [0.2.0] - 2026-03-11
 
 ### Added
 

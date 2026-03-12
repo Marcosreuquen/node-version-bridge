@@ -10,6 +10,7 @@
 bin/nvb              ← CLI entrypoint (bash). Parses commands, delegates to libs.
 lib/
   log.sh             ← Logging to stderr. Levels: error, warn, info, debug.
+  config.sh          ← Config file loading and CLI config management.
   detect.sh          ← Walks directory tree upward to find version files.
   parse.sh           ← Extracts & normalizes version from each file format.
   resolve.sh         ← Applies priority rules, selects target version.
@@ -48,6 +49,7 @@ test/
 | `NVB_LOG_LEVEL` | Verbosity (error/warn/info/debug) | `error` |
 | `NVB_PRIORITY` | File priority (comma-separated) | `.nvmrc,.node-version,.tool-versions,package.json` |
 | `NVB_CACHE_DIR` | Cache directory | `$XDG_CACHE_HOME/node-version-bridge` |
+| `NVB_AUTO_INSTALL` | Auto-install missing versions (true/false) | `false` |
 | `NVB_ALIAS_CACHE_TTL` | Alias cache TTL in seconds | `3600` |
 
 ## CLI Commands
@@ -55,6 +57,7 @@ test/
 - `nvb refresh` — Output eval-able commands (for hooks)
 - `nvb current` — Show resolved version and active Node
 - `nvb doctor` — Diagnostic check of managers, files, config
+- `nvb config` — Manage configuration (list, get, set, unset, path)
 - `nvb version` — Print version
 - `nvb help` — Usage info
 
@@ -68,7 +71,7 @@ Tests are pure bash (no external dependencies). They create temporary fixture di
 
 - **Language**: All implementation is POSIX-compatible bash (≥4.0). No external runtimes required.
 - **Output discipline**: stdout is reserved for eval-able commands or user-facing display. Logs always go to stderr.
-- **No side effects**: `nvb` never modifies project files, never installs Node versions automatically, and never writes to the repo directory.
+- **No side effects**: `nvb` never modifies project files and never writes to the repo directory. Auto-installation of Node versions is opt-in via `NVB_AUTO_INSTALL`.
 - **macOS compatibility**: Avoids `readlink -f` and GNU-specific flags. Uses portable alternatives.
 
 ## Extending
@@ -77,7 +80,8 @@ To add a new version manager adapter:
 1. Add detection logic in `nvb_detect_manager()` in `lib/manager.sh`
 2. Add availability check in `nvb_adapter_available()`
 3. Add eval-able apply command in `nvb_adapter_apply_cmd()`
-4. Add the manager to the `managers` array in `nvb_cmd_doctor()`
+4. Add eval-able install command in `nvb_adapter_install_cmd()`
+5. Add the manager to the `managers` array in `nvb_cmd_doctor()`
 
 To add a new version file format:
 1. Add parser function in `lib/parse.sh`

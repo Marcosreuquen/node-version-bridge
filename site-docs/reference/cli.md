@@ -10,39 +10,109 @@ eval "$(nvb refresh)"
 
 If no version file is found or the version is already active (cache hit), it outputs nothing.
 
+When `NVB_AUTO_INSTALL` is `true`, the output will include an install command before the switch command if the version is not already installed.
+
 ## `nvb current`
 
 Shows the resolved target version, the source file, the currently active Node version, and the detected version manager.
 
 ```bash
 $ nvb current
-Resolved version:  20.11.0
-Source:            /home/user/my-project/.nvmrc
-Active Node:       20.11.0
-Manager:           fnm
+node-version-bridge v0.4.0
+
+  Active Node:    20.11.0
+  Resolved:       20.11.0
+  Source:         /home/user/my-project/.nvmrc
+  Manager:        fnm
 ```
 
 ## `nvb doctor`
 
-Runs diagnostics to verify your setup.
+Runs diagnostics to verify your setup. Shows available managers, detected version files, configuration (including config file path and auto-install status), and active Node version.
 
 ```bash
 $ nvb doctor
-node-version-bridge doctor
-  Version:   0.2.1
-  Manager:   fnm (auto-detected)
-  Priority:  .nvmrc,.node-version,.tool-versions,package.json
-  Cache dir: /home/user/.cache/node-version-bridge
+node-version-bridge v0.4.0 — diagnostics
 
-  Managers:
-    ✓ fnm
-    ✗ nvm
-    ✗ mise
-    ✗ asdf
-    ✗ n
+Version managers:
+  ● fnm (active)
+  ✗ nvm
+  ✗ mise
+  ✗ asdf
+  ✗ n
 
-  Version files in current tree:
-    .nvmrc → 20.11.0
+Version files (from /home/user/my-project):
+  ✓ /home/user/my-project/.nvmrc → 20.11.0
+  ✗ .node-version (not found)
+  ✗ .tool-versions (not found)
+  ✗ package.json (not found)
+
+Configuration:
+  NVB_MANAGER:         (auto-detect)
+  NVB_LOG_LEVEL:       error
+  NVB_PRIORITY:        .nvmrc,.node-version,.tool-versions,package.json
+  NVB_CACHE_DIR:       /home/user/.cache/node-version-bridge
+  NVB_AUTO_INSTALL:    false
+  NVB_ALIAS_CACHE_TTL: 3600
+  Config file:         /home/user/.config/nvb/config
+
+Active Node: v20.11.0
+```
+
+## `nvb config`
+
+Manage nvb configuration from the command line.
+
+### `nvb config list`
+
+Show all configuration keys with their effective values and sources (env, config file, or default).
+
+```bash
+$ nvb config list
+Configuration (/home/user/.config/nvb/config):
+
+  NVB_MANAGER=(default)
+  NVB_LOG_LEVEL=debug  <- config file
+  NVB_PRIORITY=(default)
+  NVB_CACHE_DIR=(default)
+  NVB_ALIAS_CACHE_TTL=(default)
+  NVB_AUTO_INSTALL=true  <- config file
+```
+
+### `nvb config get <KEY>`
+
+Get the effective value of a specific key.
+
+```bash
+$ nvb config get NVB_AUTO_INSTALL
+true
+```
+
+### `nvb config set <KEY> <VALUE>`
+
+Set a value in the config file.
+
+```bash
+$ nvb config set NVB_AUTO_INSTALL true
+Set NVB_AUTO_INSTALL=true in /home/user/.config/nvb/config
+```
+
+### `nvb config unset <KEY>`
+
+Remove a key from the config file.
+
+```bash
+$ nvb config unset NVB_MANAGER
+Removed NVB_MANAGER from /home/user/.config/nvb/config
+```
+
+### `nvb config path`
+
+Print the path to the config file.
+
+```bash
+$ nvb config path
+/home/user/.config/nvb/config
 ```
 
 ## `nvb version`
@@ -51,7 +121,7 @@ Prints the nvb version.
 
 ```bash
 $ nvb version
-nvb 0.2.1
+nvb 0.4.0
 ```
 
 ## `nvb help`

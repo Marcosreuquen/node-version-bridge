@@ -14,6 +14,8 @@ Many Node projects already have files like `.nvmrc` or `.node-version`, but if y
 
 - **Manager-agnostic** — works with nvm, fnm, mise, asdf, and n
 - **Zero config** — works out of the box with existing version files
+- **Config file support** — optional `~/.config/nvb/config` with CLI management
+- **Auto-install** — optionally install missing Node versions automatically
 - **Alias resolution** — `lts/*`, `lts/iron`, `node`, `stable`, `latest` resolved automatically
 - **Smart caching** — skips redundant version switches
 - **Multiple file formats** — `.nvmrc`, `.node-version`, `.tool-versions`, `package.json`
