@@ -2,6 +2,48 @@
 # node-version-bridge — Manager detection and adapter dispatch
 # Detects the active Node version manager and generates apply commands
 
+# Check if a version is a full semver (x.y.z)
+_nvb_is_full_version() {
+  [[ "$1" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]
+}
+
+# Resolve a partial version (e.g. "18" or "18.20") to the best matching
+# installed version. For managers that handle partials natively (nvm, fnm, n),
+# returns the version as-is. For asdf/mise, queries installed versions.
+nvb_resolve_installed_version() {
+  local manager="$1"
+  local version="$2"
+
+  # Full semver doesn't need resolution
+  if _nvb_is_full_version "$version"; then
+    echo "$version"
+    return 0
+  fi
+
+  local match=""
+  case "$manager" in
+    asdf)
+      match="$(asdf list nodejs 2>/dev/null | tr -d ' *' | grep -E "^${version}(\.|$)" | sort -t. -k1,1n -k2,2n -k3,3n | tail -1)"
+      ;;
+    mise)
+      match="$(mise ls --installed node 2>/dev/null | awk '{print $2}' | grep -E "^${version}(\.|$)" | sort -t. -k1,1n -k2,2n -k3,3n | tail -1)"
+      ;;
+    *)
+      # nvm, fnm, n handle partial versions natively
+      echo "$version"
+      return 0
+      ;;
+  esac
+
+  if [[ -n "$match" ]]; then
+    nvb_log debug "Resolved partial version ${version} → ${match} for ${manager}"
+    echo "$match"
+  else
+    nvb_log debug "No installed version matching ${version} for ${manager}"
+    echo "$version"
+  fi
+}
+
 # Detect which version manager is available
 # Respects NVB_MANAGER override, otherwise auto-detects
 nvb_detect_manager() {
@@ -81,7 +123,11 @@ nvb_adapter_install_cmd() {
       echo "mise install node@'${version}' >/dev/null 2>&1"
       ;;
     asdf)
-      echo "asdf install nodejs '${version}' >/dev/null 2>&1"
+      if _nvb_is_full_version "$version"; then
+        echo "asdf install nodejs '${version}' >/dev/null 2>&1"
+      else
+        echo "asdf install nodejs \"\$(asdf latest nodejs '${version}')\" >/dev/null 2>&1"
+      fi
       ;;
     n)
       echo "n '${version}' >/dev/null 2>&1"

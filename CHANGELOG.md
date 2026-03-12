@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.0] - 2026-03-12
+
+### Added
+
+- **Partial version resolution**: Versions like `18` or `20.19` from `.nvmrc` are now resolved to the best matching installed version (e.g. `18.20.8`) for managers that require exact versions (asdf, mise). Managers that handle partials natively (nvm, fnm, n) are unaffected.
+- `nvb current` now shows the resolution arrow (`18 → 18.20.8`) when a partial version is expanded.
+- `nvb_resolve_installed_version()` function in `manager.sh` for querying installed versions.
+- `_nvb_is_full_version()` helper to detect full semver versions.
+- asdf install command now uses `asdf latest nodejs <prefix>` for partial versions.
+
+### Fixed
+
+- **asdf**: `export ASDF_NODEJS_VERSION` now receives the full installed version instead of a partial that asdf can't resolve, fixing `node -v` returning "No version is set".
+
 ## [0.4.1] - 2026-03-12
 
 ### Fixed

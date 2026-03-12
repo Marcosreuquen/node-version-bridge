@@ -2,6 +2,19 @@
 
 All notable changes to this project are documented here. See the full [CHANGELOG.md](https://github.com/marcosreuquen/node-version-bridge/blob/main/CHANGELOG.md) on GitHub for the canonical version.
 
+## [0.5.0] - 2026-03-12
+
+### Added
+
+- Partial version resolution: `18` from `.nvmrc` resolves to `18.20.8` for asdf/mise.
+- `nvb current` shows resolution arrow (`18 → 18.20.8`) for expanded versions.
+- `nvb_resolve_installed_version()` queries installed versions per manager.
+- asdf install command uses `asdf latest` for partial versions.
+
+### Fixed
+
+- asdf now receives full installed version, fixing "No version is set" error.
+
 ## [0.4.1] - 2026-03-12
 
 ### Fixed

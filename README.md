@@ -168,6 +168,6 @@ bash test/run.sh
 
 ## Status
 
-v0.4.1 — improved install/uninstall scripts with PATH setup and config file creation. See [Changelog](./CHANGELOG.md).
+v0.5.0 — partial version resolution for asdf/mise, config file support, and auto-install. See [Changelog](./CHANGELOG.md).
 
 **[Full Documentation](https://marcosreuquen.github.io/node-version-bridge/)**

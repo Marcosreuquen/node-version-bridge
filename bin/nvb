@@ -5,7 +5,7 @@
 
 set -euo pipefail
 
-NVB_VERSION="0.4.1"
+NVB_VERSION="0.5.0"
 
 # Resolve script location (handles symlinks on macOS/Linux)
 _nvb_resolve_root() {
@@ -62,16 +62,28 @@ nvb_cmd_refresh() {
 
   nvb_log info "Switching to Node ${resolved_version} (from ${resolved_source}) via ${manager}"
 
+  # Resolve partial version (e.g. "18" → "18.20.8") for managers that need exact versions
+  local apply_version
+  apply_version="$(nvb_resolve_installed_version "$manager" "$resolved_version")"
+
   # Auto-install if enabled
   local auto_install
   auto_install="$(nvb_config_get NVB_AUTO_INSTALL false)"
   if [[ "$auto_install" == "true" ]]; then
-    nvb_log debug "Auto-install enabled, emitting install command"
-    nvb_adapter_install_cmd "$manager" "$resolved_version"
+    # If version couldn't be resolved to installed, install it first
+    if [[ "$apply_version" == "$resolved_version" ]] && ! _nvb_is_full_version "$resolved_version"; then
+      nvb_log debug "Auto-install enabled, no installed match for partial version ${resolved_version}"
+      nvb_adapter_install_cmd "$manager" "$resolved_version"
+      # Re-resolve after install (next hook trigger will pick it up if eval'd install succeeds)
+      apply_version="$(nvb_resolve_installed_version "$manager" "$resolved_version")"
+    else
+      nvb_log debug "Auto-install enabled, emitting install command"
+      nvb_adapter_install_cmd "$manager" "$apply_version"
+    fi
   fi
 
   # Output eval-able command for the shell hook
-  nvb_adapter_apply_cmd "$manager" "$resolved_version"
+  nvb_adapter_apply_cmd "$manager" "$apply_version"
 
   # Update cache
   nvb_cache_update "$PWD" "$resolved_version" "$resolved_source"
@@ -89,10 +101,20 @@ nvb_cmd_current() {
   local manager
   manager="$(nvb_detect_manager 2>/dev/null)" || manager="(none detected)"
 
+  # Resolve partial version to show what would actually be applied
+  local apply_version="${resolved_version}"
+  if [[ -n "$resolved_version" && "$manager" != "(none detected)" ]]; then
+    apply_version="$(nvb_resolve_installed_version "$manager" "$resolved_version" 2>/dev/null)" || apply_version="$resolved_version"
+  fi
+
   echo "node-version-bridge v${NVB_VERSION}"
   echo ""
   echo "  Active Node:    ${active_version}"
-  echo "  Resolved:       ${resolved_version:-(none)}"
+  if [[ -n "$resolved_version" && "$apply_version" != "$resolved_version" ]]; then
+    echo "  Resolved:       ${resolved_version} → ${apply_version}"
+  else
+    echo "  Resolved:       ${resolved_version:-(none)}"
+  fi
   echo "  Source:         ${resolved_source:-(none)}"
   echo "  Manager:        ${manager}"
 }
