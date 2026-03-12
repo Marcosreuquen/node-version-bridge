@@ -2,6 +2,17 @@
 
 All notable changes to this project are documented here. See the full [CHANGELOG.md](https://github.com/marcosreuquen/node-version-bridge/blob/main/CHANGELOG.md) on GitHub for the canonical version.
 
+## [0.4.1] - 2026-03-12
+
+### Fixed
+
+- Install script adds `nvb` to PATH so the command works after installation.
+- Install script creates a default config file at `~/.config/nvb/config`.
+- Install script shows a clear summary of installed paths.
+- Uninstall script reliably removes all nvb entries from shell rc files.
+- Uninstall script removes config directory.
+- Both scripts are idempotent.
+
 ## [0.4.0] - 2026-03-11
 
 ### Added

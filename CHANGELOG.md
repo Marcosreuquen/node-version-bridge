@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.1] - 2026-03-12
+
+### Fixed
+
+- **Install script**: `nvb` is now added to `PATH` via shell rc file, so the `nvb` command works out of the box after installation.
+- **Install script**: Creates a default config file at `~/.config/nvb/config` with all available options documented as comments.
+- **Install script**: Shows a clear summary of installed paths (binary, config, install dir, shell config) after installation.
+- **Uninstall script**: Reliably removes all nvb entries (PATH export, hook source, markers) from shell rc files in a single pass.
+- **Uninstall script**: Now also removes the config directory (`~/.config/nvb/`).
+- Both scripts are fully idempotent — safe to run multiple times.
+
 ## [0.4.0] - 2026-03-11
 
 ### Added
