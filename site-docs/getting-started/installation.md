@@ -1,6 +1,22 @@
 # Installation
 
-## Quick Install (recommended)
+## npm (recommended)
+
+```bash
+npm install -g node-version-bridge
+```
+
+This installs the `nvb` command globally. You still need to add the shell hook (see below).
+
+## GitHub Releases
+
+Download the latest release from [GitHub Releases](https://github.com/Marcosreuquen/node-version-bridge/releases), extract it, and run the install script:
+
+```bash
+bash install.sh
+```
+
+## Quick Install (from source)
 
 ```bash
 git clone https://github.com/marcosreuquen/node-version-bridge.git
@@ -20,6 +36,26 @@ Then restart your shell or run:
 ```bash
 source ~/.zshrc   # or ~/.bashrc
 ```
+
+## Shell Hook Setup
+
+If you installed via npm or GitHub Releases, add the hook manually:
+
+=== "Zsh"
+
+    Add to `~/.zshrc`:
+
+    ```bash
+    source "$(npm prefix -g)/lib/node_modules/node-version-bridge/hooks/nvb.zsh"
+    ```
+
+=== "Bash"
+
+    Add to `~/.bashrc`:
+
+    ```bash
+    source "$(npm prefix -g)/lib/node_modules/node-version-bridge/hooks/nvb.bash"
+    ```
 
 ## Manual Install
 

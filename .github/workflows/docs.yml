@@ -2,8 +2,10 @@ name: Deploy Docs
 
 on:
   push:
-    tags:
-      - 'v*'
+    branches: [main]
+    paths:
+      - 'site-docs/**'
+      - 'mkdocs.yml'
   workflow_dispatch:
 
 permissions:

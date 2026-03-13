@@ -31,7 +31,35 @@ Aliases like `lts/*`, `lts/iron`, `node`, `stable`, and `latest` are automatical
 
 ## Installation
 
-### Quick install (recommended)
+### npm (recommended)
+
+```bash
+npm install -g node-version-bridge
+```
+
+This installs the `nvb` command globally. Then add the shell hook:
+
+**Zsh** — add to `~/.zshrc`:
+
+```bash
+source "$(npm prefix -g)/lib/node_modules/node-version-bridge/hooks/nvb.zsh"
+```
+
+**Bash** — add to `~/.bashrc`:
+
+```bash
+source "$(npm prefix -g)/lib/node_modules/node-version-bridge/hooks/nvb.bash"
+```
+
+### GitHub Releases
+
+Download the latest release from [GitHub Releases](https://github.com/Marcosreuquen/node-version-bridge/releases), extract it, and run:
+
+```bash
+bash install.sh
+```
+
+### From source
 
 ```bash
 git clone https://github.com/marcosreuquen/node-version-bridge.git
