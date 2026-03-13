@@ -95,6 +95,7 @@ add_hook() {
   local rc_file
   rc_file="$(shell_rc_file "$user_shell")"
 
+  # shellcheck disable=SC2016
   local hook_line='eval "$(nvb init '"${user_shell}"')"'
   local marker="# node-version-bridge:hook"
 
@@ -144,7 +145,9 @@ if [[ -z "$user_shell" ]]; then
   echo "  export PATH=\"${NVB_INSTALL_DIR}/bin:\$PATH\""
   echo ""
   echo "  # Enable auto-switching hook"
+  # shellcheck disable=SC2016
   echo '  Zsh:  eval "$(nvb init zsh)"'
+  # shellcheck disable=SC2016
   echo '  Bash: eval "$(nvb init bash)"'
 else
   add_to_path "$user_shell"

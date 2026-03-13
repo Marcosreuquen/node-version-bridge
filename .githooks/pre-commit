@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+echo "[pre-commit] Running ShellCheck..."
+shellcheck -x -s bash bin/nvb lib/*.sh hooks/*.bash hooks/*.zsh install.sh uninstall.sh
+
+echo "[pre-commit] Running tests..."
+bash test/run.sh
+
+echo "[pre-commit] All checks passed."

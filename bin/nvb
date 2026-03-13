@@ -277,7 +277,9 @@ nvb_cmd_setup() {
   if [[ "$shell_name" != "zsh" && "$shell_name" != "bash" ]]; then
     echo "[nvb] Could not detect shell (got: ${shell_name}). Supported: zsh, bash" >&2
     echo "[nvb] Add manually to your shell config:" >&2
+    # shellcheck disable=SC2016
     echo '  eval "$(nvb init zsh)"   # for zsh' >&2
+    # shellcheck disable=SC2016
     echo '  eval "$(nvb init bash)"  # for bash' >&2
     return 1
   fi
@@ -288,6 +290,7 @@ nvb_cmd_setup() {
     bash) rc_file="$HOME/.bashrc" ;;
   esac
 
+  # shellcheck disable=SC2016
   local hook_line='eval "$(nvb init '"${shell_name}"')"'
   local marker="# node-version-bridge:hook"
 
