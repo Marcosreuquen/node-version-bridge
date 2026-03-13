@@ -2,6 +2,19 @@
 
 All notable changes to this project are documented here. See the full [CHANGELOG.md](https://github.com/marcosreuquen/node-version-bridge/blob/main/CHANGELOG.md) on GitHub for the canonical version.
 
+## [0.6.0] - 2026-03-12
+
+### Added
+
+- `nvb setup` command: auto-configures shell hook (run once after install).
+- `nvb init <shell>` command: outputs eval-able hook code for zsh/bash.
+- npm `postinstall` message prompting `nvb setup`.
+
+### Changed
+
+- Install script uses `eval "$(nvb init ...)"` hook format instead of `source`.
+- Docs updated to recommend `nvb setup` for hook configuration.
+
 ## [0.5.0] - 2026-03-12
 
 ### Added

@@ -54,6 +54,8 @@ test/
 
 ## CLI Commands
 
+- `nvb setup` — Auto-configure shell hook (run once after install)
+- `nvb init <shell>` — Output eval-able hook code for zsh/bash (used in shell config)
 - `nvb refresh` — Output eval-able commands (for hooks)
 - `nvb current` — Show resolved version and active Node
 - `nvb doctor` — Diagnostic check of managers, files, config
@@ -87,3 +89,39 @@ To add a new version file format:
 1. Add parser function in `lib/parse.sh`
 2. Add case branch in `nvb_parse_file()`
 3. Include filename in default `NVB_PRIORITY`
+
+## Versioning & Releases
+
+The project follows [Semantic Versioning](https://semver.org/) and uses [Keep a Changelog](https://keepachangelog.com/) format.
+
+### Version sources (must stay in sync)
+
+| File | Location |
+|---|---|
+| `package.json` | `"version": "X.Y.Z"` |
+| `bin/nvb` | `NVB_VERSION="X.Y.Z"` (line ~8) |
+| `CHANGELOG.md` | `## [X.Y.Z] - YYYY-MM-DD` header |
+| `README.md` | Status line at the bottom (`vX.Y.Z — ...`) |
+| `site-docs/development/changelog.md` | Mirrors CHANGELOG.md in abbreviated form |
+
+### Release pipeline
+
+The release workflow (`.github/workflows/release.yml`) runs on push to `main` and:
+
+1. **version-check**: Verifies all 5 version sources match, confirms the version is higher than the latest git tag, and checks if the version already exists on npm.
+2. **ci**: Runs the full test suite and ShellCheck via reusable workflow (`.github/workflows/ci.yml`).
+3. **publish-npm**: Publishes to npm with provenance (skipped if version already on registry).
+4. **create-tag**: Creates a git tag `vX.Y.Z`.
+5. **create-release**: Creates a GitHub Release from the tag with auto-generated notes.
+
+### Changelog conventions
+
+- Each version gets a `## [X.Y.Z] - YYYY-MM-DD` header.
+- Sections: `### Added`, `### Changed`, `### Fixed`, `### Removed`.
+- Entries should be concise and user-facing (what changed, not how).
+
+## Distribution
+
+- **npm**: Published as `node-version-bridge` (unscoped) on npmjs.com. Installs `nvb` binary globally.
+- **GitHub Releases**: Tarballs attached to each release tag.
+- **From source**: Clone + `bash install.sh` copies to `~/.local/share/nvb/`.

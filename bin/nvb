@@ -5,7 +5,7 @@
 
 set -euo pipefail
 
-NVB_VERSION="0.5.0"
+NVB_VERSION="0.6.0"
 
 # Resolve script location (handles symlinks on macOS/Linux)
 _nvb_resolve_root() {
@@ -230,6 +230,88 @@ nvb_cmd_config() {
   esac
 }
 
+nvb_cmd_init() {
+  local shell_name="${1:-}"
+
+  if [[ -z "$shell_name" ]]; then
+    # Auto-detect from parent shell
+    shell_name="$(basename "${SHELL:-}")"
+  fi
+
+  case "$shell_name" in
+    zsh)
+      cat <<'HOOK'
+_nvb_hook() {
+  [[ "${_NVB_LAST_DIR:-}" == "$PWD" ]] && return
+  _NVB_LAST_DIR="$PWD"
+  eval "$(nvb refresh 2>/dev/null)"
+}
+autoload -U add-zsh-hook
+add-zsh-hook chpwd _nvb_hook
+_nvb_hook
+HOOK
+      ;;
+    bash)
+      cat <<'HOOK'
+_nvb_hook() {
+  [[ "${_NVB_LAST_DIR:-}" == "$PWD" ]] && return
+  _NVB_LAST_DIR="$PWD"
+  eval "$(nvb refresh 2>/dev/null)"
+}
+if [[ ";${PROMPT_COMMAND:-};" != *";_nvb_hook;"* ]]; then
+  PROMPT_COMMAND="_nvb_hook;${PROMPT_COMMAND:-}"
+fi
+HOOK
+      ;;
+    *)
+      echo "Unknown shell: ${shell_name}. Supported: zsh, bash" >&2
+      return 1
+      ;;
+  esac
+}
+
+nvb_cmd_setup() {
+  local shell_name
+  shell_name="$(basename "${SHELL:-}")"
+
+  if [[ "$shell_name" != "zsh" && "$shell_name" != "bash" ]]; then
+    echo "[nvb] Could not detect shell (got: ${shell_name}). Supported: zsh, bash" >&2
+    echo "[nvb] Add manually to your shell config:" >&2
+    echo '  eval "$(nvb init zsh)"   # for zsh' >&2
+    echo '  eval "$(nvb init bash)"  # for bash' >&2
+    return 1
+  fi
+
+  local rc_file
+  case "$shell_name" in
+    zsh)  rc_file="${ZDOTDIR:-$HOME}/.zshrc" ;;
+    bash) rc_file="$HOME/.bashrc" ;;
+  esac
+
+  local hook_line='eval "$(nvb init '"${shell_name}"')"'
+  local marker="# node-version-bridge:hook"
+
+  # Check if already configured (new or legacy format)
+  if [[ -f "$rc_file" ]]; then
+    if grep -qF "nvb init" "$rc_file" || grep -qF "$marker" "$rc_file"; then
+      echo "[nvb] Shell hook already configured in ${rc_file}"
+      return 0
+    fi
+  fi
+
+  echo "[nvb] Adding shell hook to ${rc_file}..."
+  {
+    echo ""
+    echo "$marker"
+    echo "$hook_line"
+  } >> "$rc_file"
+
+  echo "[nvb] Done! Restart your shell or run:"
+  echo ""
+  echo "  source ${rc_file}"
+  echo ""
+}
+
 nvb_cmd_help() {
   cat <<EOF
 node-version-bridge v${NVB_VERSION}
@@ -240,6 +322,8 @@ using your preferred version manager.
 Usage: nvb <command> [options]
 
 Commands:
+  setup       Auto-configure shell hook (run once after install)
+  init        Output shell hook code for eval (used in shell config)
   refresh     Detect version and output shell commands to apply it (for eval)
   current     Show resolved version, source, and active Node version
   doctor      Check available managers and configuration
@@ -257,9 +341,10 @@ Config examples:
 Supported version files: .nvmrc, .node-version, .tool-versions, package.json (engines.node)
 Supported managers: nvm, fnm, mise, asdf, n
 
-Shell integration (add to your shell config):
-  Zsh:   source <path-to-nvb>/hooks/nvb.zsh
-  Bash:  source <path-to-nvb>/hooks/nvb.bash
+Shell integration:
+  nvb setup                    Auto-configure (recommended, run once)
+  eval "$(nvb init zsh)"       Manual — add to ~/.zshrc
+  eval "$(nvb init bash)"      Manual — add to ~/.bashrc
 
 Environment variables:
   NVB_MANAGER          Force a specific version manager (nvm, fnm, mise, asdf, n)
@@ -276,6 +361,8 @@ EOF
 # --- Main dispatch ---
 
 case "${1:-help}" in
+  setup)       nvb_cmd_setup ;;
+  init)        shift; nvb_cmd_init "$@" ;;
   refresh)     nvb_cmd_refresh ;;
   current)     nvb_cmd_current ;;
   doctor)      nvb_cmd_doctor ;;

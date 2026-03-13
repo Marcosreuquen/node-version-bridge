@@ -35,21 +35,10 @@ Aliases like `lts/*`, `lts/iron`, `node`, `stable`, and `latest` are automatical
 
 ```bash
 npm install -g node-version-bridge
+nvb setup
 ```
 
-This installs the `nvb` command globally. Then add the shell hook:
-
-**Zsh** — add to `~/.zshrc`:
-
-```bash
-source "$(npm prefix -g)/lib/node_modules/node-version-bridge/hooks/nvb.zsh"
-```
-
-**Bash** — add to `~/.bashrc`:
-
-```bash
-source "$(npm prefix -g)/lib/node_modules/node-version-bridge/hooks/nvb.bash"
-```
+This installs the `nvb` command globally and configures the shell hook automatically.
 
 ### GitHub Releases
 
@@ -86,13 +75,13 @@ Then add the hook to your shell config:
 **Zsh** — add to `~/.zshrc`:
 
 ```bash
-source /path/to/node-version-bridge/hooks/nvb.zsh
+eval "$(nvb init zsh)"
 ```
 
 **Bash** — add to `~/.bashrc`:
 
 ```bash
-source /path/to/node-version-bridge/hooks/nvb.bash
+eval "$(nvb init bash)"
 ```
 
 ### Verify installation
@@ -115,13 +104,16 @@ This removes installed files, the shell hook from your config, and the cache.
 
 ### Manual
 
-1. Remove the `source ...nvb.zsh` (or `nvb.bash`) line from your `.zshrc`/`.bashrc`
+1. Remove the nvb lines from your `.zshrc`/`.bashrc` (`eval "$(nvb init ...)"` or `source ...nvb.zsh`/`nvb.bash`)
 2. Delete the install directory: `rm -rf ~/.local/share/nvb`
 3. Optional — delete the cache: `rm -rf ~/.cache/node-version-bridge`
 
 ## Usage
 
 ```bash
+# Configure shell hook (run once after install)
+nvb setup
+
 # Show resolved version vs active version
 nvb current
 
@@ -186,6 +178,6 @@ bash test/run.sh
 
 ## Status
 
-v0.5.0 — partial version resolution for asdf/mise, config file support, and auto-install. See [Changelog](./CHANGELOG.md).
+v0.6.0 — automatic shell hook setup, `nvb setup` and `nvb init` commands. See [Changelog](./CHANGELOG.md).
 
 **[Full Documentation](https://marcosreuquen.github.io/node-version-bridge/)**

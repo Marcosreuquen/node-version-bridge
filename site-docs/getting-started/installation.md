@@ -4,9 +4,10 @@
 
 ```bash
 npm install -g node-version-bridge
+nvb setup
 ```
 
-This installs the `nvb` command globally. You still need to add the shell hook (see below).
+This installs the `nvb` command globally and configures the shell hook automatically.
 
 ## GitHub Releases
 
@@ -39,14 +40,22 @@ source ~/.zshrc   # or ~/.bashrc
 
 ## Shell Hook Setup
 
-If you installed via npm or GitHub Releases, add the hook manually:
+If you installed via npm or GitHub Releases manually, run:
+
+```bash
+nvb setup
+```
+
+This auto-detects your shell (zsh/bash), adds the hook line to your rc file, and prints a confirmation.
+
+Alternatively, you can add the hook manually:
 
 === "Zsh"
 
     Add to `~/.zshrc`:
 
     ```bash
-    source "$(npm prefix -g)/lib/node_modules/node-version-bridge/hooks/nvb.zsh"
+    eval "$(nvb init zsh)"
     ```
 
 === "Bash"
@@ -54,7 +63,7 @@ If you installed via npm or GitHub Releases, add the hook manually:
     Add to `~/.bashrc`:
 
     ```bash
-    source "$(npm prefix -g)/lib/node_modules/node-version-bridge/hooks/nvb.bash"
+    eval "$(nvb init bash)"
     ```
 
 ## Manual Install
@@ -72,7 +81,7 @@ Then add the hook to your shell config:
     Add to `~/.zshrc`:
 
     ```bash
-    source /path/to/node-version-bridge/hooks/nvb.zsh
+    eval "$(nvb init zsh)"
     ```
 
 === "Bash"
@@ -80,7 +89,7 @@ Then add the hook to your shell config:
     Add to `~/.bashrc`:
 
     ```bash
-    source /path/to/node-version-bridge/hooks/nvb.bash
+    eval "$(nvb init bash)"
     ```
 
 ## Verify
@@ -104,7 +113,7 @@ This removes installed files, PATH entry, shell hook, cache, and config director
 
 ### Manual
 
-1. Remove the nvb lines from your `.zshrc`/`.bashrc` (PATH export and `source ...nvb.zsh`/`nvb.bash`)
+1. Remove the nvb lines from your `.zshrc`/`.bashrc` (`eval "$(nvb init ...)"`, PATH export, or `source ...nvb.zsh`/`nvb.bash`)
 2. Delete the install directory: `rm -rf ~/.local/share/nvb`
 3. Delete the config: `rm -rf ~/.config/nvb`
 4. Optionally delete the cache: `rm -rf ~/.cache/node-version-bridge`

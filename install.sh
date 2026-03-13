@@ -95,7 +95,7 @@ add_hook() {
   local rc_file
   rc_file="$(shell_rc_file "$user_shell")"
 
-  local hook_line="source \"${NVB_INSTALL_DIR}/hooks/nvb.${user_shell}\""
+  local hook_line='eval "$(nvb init '"${user_shell}"')"'
   local marker="# node-version-bridge:hook"
 
   if [[ -f "$rc_file" ]] && grep -qF "$marker" "$rc_file"; then
@@ -103,7 +103,11 @@ add_hook() {
     return 0
   fi
 
-  # Also check for old marker format
+  # Also check for new eval format or old source format
+  if [[ -f "$rc_file" ]] && grep -qF "nvb init" "$rc_file"; then
+    info "Hook already present in ${rc_file} (eval format), skipping."
+    return 0
+  fi
   if [[ -f "$rc_file" ]] && grep -qF "# node-version-bridge" "$rc_file" && grep -qF "nvb.${user_shell}" "$rc_file"; then
     info "Hook already present in ${rc_file} (legacy format), skipping."
     return 0
@@ -140,8 +144,8 @@ if [[ -z "$user_shell" ]]; then
   echo "  export PATH=\"${NVB_INSTALL_DIR}/bin:\$PATH\""
   echo ""
   echo "  # Enable auto-switching hook"
-  echo "  Zsh:  source \"${NVB_INSTALL_DIR}/hooks/nvb.zsh\""
-  echo "  Bash: source \"${NVB_INSTALL_DIR}/hooks/nvb.bash\""
+  echo '  Zsh:  eval "$(nvb init zsh)"'
+  echo '  Bash: eval "$(nvb init bash)"'
 else
   add_to_path "$user_shell"
   add_hook "$user_shell"

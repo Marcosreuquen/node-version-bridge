@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.0] - 2026-03-12
+
+### Added
+
+- **`nvb setup` command**: Auto-configures the shell hook in your `.zshrc` or `.bashrc`. Run once after install — no more manual editing.
+- **`nvb init <shell>` command**: Outputs eval-able hook code for zsh or bash. Used by `nvb setup` or can be added manually to shell config (`eval "$(nvb init zsh)"`).
+- npm `postinstall` message prompting users to run `nvb setup`.
+
+### Changed
+
+- Install script (`install.sh`) now uses `eval "$(nvb init ...)"` hook format instead of `source .../hooks/nvb.zsh`.
+- Updated README and documentation to recommend `nvb setup` for hook configuration.
+
 ## [0.5.0] - 2026-03-12
 
 ### Added
