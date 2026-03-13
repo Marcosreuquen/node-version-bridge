@@ -16,3 +16,7 @@ _nvb_hook() {
 if [[ ";${PROMPT_COMMAND:-};" != *";_nvb_hook;"* ]]; then
   PROMPT_COMMAND="_nvb_hook;${PROMPT_COMMAND:-}"
 fi
+
+# Force refresh on shell start (cache may be stale from previous session)
+eval "$(NVB_FORCE_REFRESH=1 "${_NVB_BIN}" refresh 2>/dev/null)"
+_NVB_LAST_DIR="$PWD"

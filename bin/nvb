@@ -5,7 +5,7 @@
 
 set -euo pipefail
 
-NVB_VERSION="0.6.0"
+NVB_VERSION="0.6.1"
 
 # Resolve script location (handles symlinks on macOS/Linux)
 _nvb_resolve_root() {
@@ -46,8 +46,8 @@ nvb_cmd_refresh() {
     return 0
   fi
 
-  # Check cache — skip if nothing changed
-  if nvb_cache_is_current "$PWD" "$resolved_version" "$resolved_source"; then
+  # Check cache — skip if nothing changed (bypass with NVB_FORCE_REFRESH=1)
+  if [[ "${NVB_FORCE_REFRESH:-}" != "1" ]] && nvb_cache_is_current "$PWD" "$resolved_version" "$resolved_source"; then
     nvb_log debug "Cache hit: ${resolved_version} from ${resolved_source}"
     return 0
   fi
@@ -248,7 +248,8 @@ _nvb_hook() {
 }
 autoload -U add-zsh-hook
 add-zsh-hook chpwd _nvb_hook
-_nvb_hook
+eval "$(NVB_FORCE_REFRESH=1 nvb refresh 2>/dev/null)"
+_NVB_LAST_DIR="$PWD"
 HOOK
       ;;
     bash)
@@ -261,6 +262,8 @@ _nvb_hook() {
 if [[ ";${PROMPT_COMMAND:-};" != *";_nvb_hook;"* ]]; then
   PROMPT_COMMAND="_nvb_hook;${PROMPT_COMMAND:-}"
 fi
+eval "$(NVB_FORCE_REFRESH=1 nvb refresh 2>/dev/null)"
+_NVB_LAST_DIR="$PWD"
 HOOK
       ;;
     *)

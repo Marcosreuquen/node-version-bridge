@@ -15,5 +15,6 @@ _nvb_hook() {
 autoload -U add-zsh-hook
 add-zsh-hook chpwd _nvb_hook
 
-# Run once on shell start
-_nvb_hook
+# Force refresh on shell start (cache may be stale from previous session)
+eval "$(NVB_FORCE_REFRESH=1 "${_NVB_BIN}" refresh 2>/dev/null)"
+_NVB_LAST_DIR="$PWD"

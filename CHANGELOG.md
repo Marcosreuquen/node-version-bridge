@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.1] - 2026-03-13
+
+### Fixed
+
+- **Shell startup**: Version was not applied when opening a new shell because the file-based cache persisted across sessions. Hooks now force a cache bypass on startup so env-var-based managers (asdf, mise) always apply the correct version.
+- **ShellCheck**: Added `SC2016` disable directives for intentional single-quoted eval strings in `bin/nvb` and `install.sh`.
+
+### Added
+
+- **Pre-commit hook**: `.githooks/pre-commit` runs ShellCheck and full test suite before each commit.
+
 ## [0.6.0] - 2026-03-12
 
 ### Added

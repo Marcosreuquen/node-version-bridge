@@ -2,6 +2,17 @@
 
 All notable changes to this project are documented here. See the full [CHANGELOG.md](https://github.com/marcosreuquen/node-version-bridge/blob/main/CHANGELOG.md) on GitHub for the canonical version.
 
+## [0.6.1] - 2026-03-13
+
+### Fixed
+
+- Shell startup: version not applied in new shells due to stale file cache. Hooks now force cache bypass on startup.
+- ShellCheck `SC2016` warnings in `bin/nvb` and `install.sh`.
+
+### Added
+
+- Pre-commit hook (`.githooks/pre-commit`) runs ShellCheck and tests.
+
 ## [0.6.0] - 2026-03-12
 
 ### Added
