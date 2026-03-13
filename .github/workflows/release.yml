@@ -11,6 +11,7 @@ jobs:
     outputs:
       version: ${{ steps.extract.outputs.version }}
       should_release: ${{ steps.compare.outputs.should_release }}
+      should_publish_npm: ${{ steps.npm-check.outputs.should_publish }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -75,6 +76,19 @@ jobs:
             exit 1
           fi
 
+      - name: Check if version exists on npm
+        id: npm-check
+        run: |
+          VERSION="${{ steps.extract.outputs.version }}"
+          PKG_NAME=$(node -p "require('./package.json').name")
+          if npm view "${PKG_NAME}@${VERSION}" version 2>/dev/null; then
+            echo "Version $VERSION already published on npm. Skipping publish."
+            echo "should_publish=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "Version $VERSION not found on npm. Will publish."
+            echo "should_publish=true" >> "$GITHUB_OUTPUT"
+          fi
+
   ci:
     name: CI
     needs: version-check
@@ -84,10 +98,9 @@ jobs:
   publish-npm:
     name: Publish to npm
     needs: [version-check, ci]
-    if: needs.version-check.outputs.should_release == 'true'
+    if: needs.version-check.outputs.should_release == 'true' && needs.version-check.outputs.should_publish_npm == 'true'
     runs-on: ubuntu-latest
     permissions:
-      contents: write
       id-token: write
     steps:
       - uses: actions/checkout@v4
@@ -103,9 +116,13 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
   create-tag:
-    name: Create Git tag & GitHub Release
-    needs: [version-check, publish-npm]
-    if: needs.version-check.outputs.should_release == 'true'
+    name: Create Git tag
+    needs: [version-check, ci, publish-npm]
+    if: |
+      always() &&
+      needs.version-check.outputs.should_release == 'true' &&
+      needs.ci.result == 'success' &&
+      (needs.publish-npm.result == 'success' || needs.publish-npm.result == 'skipped')
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -119,6 +136,19 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git tag -a "$VERSION" -m "Release $VERSION"
           git push origin "$VERSION"
+
+  create-release:
+    name: Create GitHub Release
+    needs: [version-check, create-tag]
+    if: |
+      always() &&
+      needs.version-check.outputs.should_release == 'true' &&
+      needs.create-tag.result == 'success'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
