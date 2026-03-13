@@ -3,21 +3,32 @@
   "version": "0.5.0",
   "description": "Detect Node.js version from project files and apply it via any version manager",
   "bin": {
-    "nvb": "./bin/nvb"
+    "nvb": "bin/nvb"
   },
   "files": [
     "bin/",
     "lib/",
     "hooks/"
   ],
-  "keywords": ["node", "version", "nvm", "fnm", "mise", "asdf", "nvmrc"],
+  "keywords": [
+    "node",
+    "version",
+    "nvm",
+    "fnm",
+    "mise",
+    "asdf",
+    "nvmrc"
+  ],
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/Marcosreuquen/node-version-bridge"
+    "url": "git+https://github.com/Marcosreuquen/node-version-bridge.git"
   },
   "author": "Marcos Reuquen",
-  "os": ["darwin", "linux"],
+  "os": [
+    "darwin",
+    "linux"
+  ],
   "engines": {
     "node": ">=14"
   }

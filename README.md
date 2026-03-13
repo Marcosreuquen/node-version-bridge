@@ -156,16 +156,6 @@ bash test/run.sh
 - No need to commit manager-specific files when `.nvmrc`/`.node-version` already exists.
 - Works with any popular Node version manager.
 
----
-
-## Documentation
-
-- [Product concept](./docs/concept.md)
-- [Technical design](./docs/technical-design.md)
-- [Roadmap](./docs/roadmap.md)
-- [Implementation plan](./docs/implementation-plan.md)
-- [Changelog](./CHANGELOG.md)
-
 ## Status
 
 v0.5.0 — partial version resolution for asdf/mise, config file support, and auto-install. See [Changelog](./CHANGELOG.md).
