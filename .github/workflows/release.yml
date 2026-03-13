@@ -1,0 +1,127 @@
+name: Release
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  version-check:
+    name: Verify version consistency
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.extract.outputs.version }}
+      should_release: ${{ steps.compare.outputs.should_release }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Extract versions from all sources
+        id: extract
+        run: |
+          PKG_VERSION=$(node -p "require('./package.json').version")
+          NVB_VERSION=$(grep -oP 'NVB_VERSION="\K[0-9]+\.[0-9]+\.[0-9]+' bin/nvb)
+          CHANGELOG_VERSION=$(grep -oP '## \[\K[0-9]+\.[0-9]+\.[0-9]+' CHANGELOG.md | head -1)
+          README_VERSION=$(grep -oP '^v\K[0-9]+\.[0-9]+\.[0-9]+' README.md | head -1)
+          SITEDOCS_VERSION=$(grep -oP '## \[\K[0-9]+\.[0-9]+\.[0-9]+' site-docs/development/changelog.md | head -1)
+
+          echo "pkg=$PKG_VERSION"
+          echo "nvb=$NVB_VERSION"
+          echo "changelog=$CHANGELOG_VERSION"
+          echo "readme=$README_VERSION"
+          echo "sitedocs=$SITEDOCS_VERSION"
+
+          echo "version=$PKG_VERSION" >> "$GITHUB_OUTPUT"
+
+          if [ "$PKG_VERSION" != "$NVB_VERSION" ] || \
+             [ "$PKG_VERSION" != "$CHANGELOG_VERSION" ] || \
+             [ "$PKG_VERSION" != "$README_VERSION" ] || \
+             [ "$PKG_VERSION" != "$SITEDOCS_VERSION" ]; then
+            echo "::error::Version mismatch detected!"
+            echo "  package.json:  $PKG_VERSION"
+            echo "  bin/nvb:       $NVB_VERSION"
+            echo "  CHANGELOG.md:  $CHANGELOG_VERSION"
+            echo "  README.md:     $README_VERSION"
+            echo "  site-docs:     $SITEDOCS_VERSION"
+            exit 1
+          fi
+
+          echo "All versions match: $PKG_VERSION"
+
+      - name: Compare with latest release
+        id: compare
+        run: |
+          VERSION="${{ steps.extract.outputs.version }}"
+          LATEST_TAG=$(git tag -l 'v*' --sort=-v:refname | head -1)
+
+          if [ -z "$LATEST_TAG" ]; then
+            echo "No previous release found. First release."
+            echo "should_release=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          LATEST_VERSION="${LATEST_TAG#v}"
+          echo "Current: $VERSION | Latest release: $LATEST_VERSION"
+
+          HIGHER=$(printf '%s\n%s' "$LATEST_VERSION" "$VERSION" | sort -V | tail -1)
+          if [ "$VERSION" = "$LATEST_VERSION" ]; then
+            echo "Version $VERSION already released. Skipping."
+            echo "should_release=false" >> "$GITHUB_OUTPUT"
+          elif [ "$VERSION" = "$HIGHER" ]; then
+            echo "Version $VERSION is higher than $LATEST_VERSION. Proceeding."
+            echo "should_release=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::error::Version $VERSION is LOWER than latest release $LATEST_VERSION!"
+            exit 1
+          fi
+
+  ci:
+    name: CI
+    needs: version-check
+    if: needs.version-check.outputs.should_release == 'true'
+    uses: ./.github/workflows/ci.yml
+
+  publish-npm:
+    name: Publish to npm
+    needs: [version-check, ci]
+    if: needs.version-check.outputs.should_release == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Publish with provenance
+        run: npm publish --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+  create-tag:
+    name: Create Git tag & GitHub Release
+    needs: [version-check, publish-npm]
+    if: needs.version-check.outputs.should_release == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Create and push tag
+        run: |
+          VERSION="v${{ needs.version-check.outputs.version }}"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag -a "$VERSION" -m "Release $VERSION"
+          git push origin "$VERSION"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: "v${{ needs.version-check.outputs.version }}"
+          generate_release_notes: true
