@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.3] - 2026-03-16
+
+### Fixed
+
+- **`nvb` command not found after cd into project with different Node version**: Running `nvb current` or any `nvb` subcommand failed when asdf had switched to a Node version where `nvb` wasn't installed. The init hook now defines a `nvb()` shell function that bypasses the asdf shim entirely.
+
 ## [0.6.2] - 2026-03-16
 
 ### Fixed

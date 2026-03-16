@@ -96,13 +96,25 @@ The project follows [Semantic Versioning](https://semver.org/) and uses [Keep a 
 
 ### Version sources (must stay in sync)
 
-| File | Location |
-|---|---|
-| `package.json` | `"version": "X.Y.Z"` |
-| `bin/nvb` | `NVB_VERSION="X.Y.Z"` (line ~8) |
-| `CHANGELOG.md` | `## [X.Y.Z] - YYYY-MM-DD` header |
-| `README.md` | Status line at the bottom (`vX.Y.Z — ...`) |
-| `site-docs/development/changelog.md` | Mirrors CHANGELOG.md in abbreviated form |
+All five locations below **must** show the same version before pushing to `main`. The CI `version-check` job enforces this.
+
+| # | File | What to update | How to find it |
+|---|---|---|---|
+| 1 | `package.json` | `"version": "X.Y.Z"` | Top-level `version` field |
+| 2 | `bin/nvb` | `NVB_VERSION="X.Y.Z"` | Line ~8 |
+| 3 | `CHANGELOG.md` | `## [X.Y.Z] - YYYY-MM-DD` | New section at top, below `# Changelog` |
+| 4 | `README.md` | `vX.Y.Z — …` | Last line (status footer) |
+| 5 | `site-docs/development/changelog.md` | `## [X.Y.Z] - YYYY-MM-DD` | Abbreviated mirror of CHANGELOG.md |
+
+### Release checklist (manual steps before pushing)
+
+1. Bump version string in `package.json` (`"version"`).
+2. Bump `NVB_VERSION` in `bin/nvb`.
+3. Add a new `## [X.Y.Z] - YYYY-MM-DD` section in `CHANGELOG.md` with user-facing entries.
+4. Add matching abbreviated section in `site-docs/development/changelog.md`.
+5. Update the status line at the bottom of `README.md` to `vX.Y.Z`.
+6. Run `.githooks/pre-commit` (ShellCheck + full test suite) and confirm it passes.
+7. Commit and push to `main`. The release pipeline handles npm publish, git tag, and GitHub Release.
 
 ### Release pipeline
 

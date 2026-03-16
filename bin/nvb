@@ -5,7 +5,7 @@
 
 set -euo pipefail
 
-NVB_VERSION="0.6.2"
+NVB_VERSION="0.6.3"
 
 # Resolve script location (handles symlinks on macOS/Linux)
 _nvb_resolve_root() {
@@ -242,6 +242,7 @@ nvb_cmd_init() {
     zsh)
       echo "_NVB_BIN='${NVB_ROOT}/bin/nvb'"
       cat <<'HOOK'
+nvb() { "${_NVB_BIN}" "$@"; }
 _nvb_hook() {
   [[ "${_NVB_LAST_DIR:-}" == "$PWD" ]] && return
   _NVB_LAST_DIR="$PWD"
@@ -256,6 +257,7 @@ HOOK
     bash)
       echo "_NVB_BIN='${NVB_ROOT}/bin/nvb'"
       cat <<'HOOK'
+nvb() { "${_NVB_BIN}" "$@"; }
 _nvb_hook() {
   [[ "${_NVB_LAST_DIR:-}" == "$PWD" ]] && return
   _NVB_LAST_DIR="$PWD"

@@ -2,6 +2,12 @@
 
 All notable changes to this project are documented here. See the full [CHANGELOG.md](https://github.com/marcosreuquen/node-version-bridge/blob/main/CHANGELOG.md) on GitHub for the canonical version.
 
+## [0.6.3] - 2026-03-16
+
+### Fixed
+
+- `nvb` command not found after cd into project with different Node version. Init hook now defines a `nvb()` shell function that bypasses asdf shims.
+
 ## [0.6.2] - 2026-03-16
 
 ### Fixed

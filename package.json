@@ -1,6 +1,6 @@
 {
   "name": "node-version-bridge",
-  "version": "0.6.2",
+  "version": "0.6.3",
   "description": "Detect Node.js version from project files and apply it via any version manager",
   "bin": {
     "nvb": "bin/nvb"
