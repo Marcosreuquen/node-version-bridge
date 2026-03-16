@@ -2,6 +2,13 @@
 
 All notable changes to this project are documented here. See the full [CHANGELOG.md](https://github.com/marcosreuquen/node-version-bridge/blob/main/CHANGELOG.md) on GitHub for the canonical version.
 
+## [0.6.2] - 2026-03-16
+
+### Fixed
+
+- nvb binary disappears after version switch on asdf/mise when installed via npm. Hook now pins the absolute binary path.
+- `nvb help` expanded `$(nvb init ...)` instead of displaying it as text.
+
 ## [0.6.1] - 2026-03-13
 
 ### Fixed

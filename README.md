@@ -178,6 +178,6 @@ bash test/run.sh
 
 ## Status
 
-v0.6.1 — automatic shell hook setup, `nvb setup` and `nvb init` commands. See [Changelog](./CHANGELOG.md).
+v0.6.2 — automatic shell hook setup, `nvb setup` and `nvb init` commands. See [Changelog](./CHANGELOG.md).
 
 **[Full Documentation](https://marcosreuquen.github.io/node-version-bridge/)**

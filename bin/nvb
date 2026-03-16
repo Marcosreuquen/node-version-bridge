@@ -5,7 +5,7 @@
 
 set -euo pipefail
 
-NVB_VERSION="0.6.1"
+NVB_VERSION="0.6.2"
 
 # Resolve script location (handles symlinks on macOS/Linux)
 _nvb_resolve_root() {
@@ -240,29 +240,31 @@ nvb_cmd_init() {
 
   case "$shell_name" in
     zsh)
+      echo "_NVB_BIN='${NVB_ROOT}/bin/nvb'"
       cat <<'HOOK'
 _nvb_hook() {
   [[ "${_NVB_LAST_DIR:-}" == "$PWD" ]] && return
   _NVB_LAST_DIR="$PWD"
-  eval "$(nvb refresh 2>/dev/null)"
+  eval "$("${_NVB_BIN}" refresh 2>/dev/null)"
 }
 autoload -U add-zsh-hook
 add-zsh-hook chpwd _nvb_hook
-eval "$(NVB_FORCE_REFRESH=1 nvb refresh 2>/dev/null)"
+eval "$(NVB_FORCE_REFRESH=1 "${_NVB_BIN}" refresh 2>/dev/null)"
 _NVB_LAST_DIR="$PWD"
 HOOK
       ;;
     bash)
+      echo "_NVB_BIN='${NVB_ROOT}/bin/nvb'"
       cat <<'HOOK'
 _nvb_hook() {
   [[ "${_NVB_LAST_DIR:-}" == "$PWD" ]] && return
   _NVB_LAST_DIR="$PWD"
-  eval "$(nvb refresh 2>/dev/null)"
+  eval "$("${_NVB_BIN}" refresh 2>/dev/null)"
 }
 if [[ ";${PROMPT_COMMAND:-};" != *";_nvb_hook;"* ]]; then
   PROMPT_COMMAND="_nvb_hook;${PROMPT_COMMAND:-}"
 fi
-eval "$(NVB_FORCE_REFRESH=1 nvb refresh 2>/dev/null)"
+eval "$(NVB_FORCE_REFRESH=1 "${_NVB_BIN}" refresh 2>/dev/null)"
 _NVB_LAST_DIR="$PWD"
 HOOK
       ;;
@@ -277,13 +279,13 @@ nvb_cmd_setup() {
   local shell_name
   shell_name="$(basename "${SHELL:-}")"
 
+  local nvb_bin="${NVB_ROOT}/bin/nvb"
+
   if [[ "$shell_name" != "zsh" && "$shell_name" != "bash" ]]; then
     echo "[nvb] Could not detect shell (got: ${shell_name}). Supported: zsh, bash" >&2
     echo "[nvb] Add manually to your shell config:" >&2
-    # shellcheck disable=SC2016
-    echo '  eval "$(nvb init zsh)"   # for zsh' >&2
-    # shellcheck disable=SC2016
-    echo '  eval "$(nvb init bash)"  # for bash' >&2
+    echo "  eval \"\$(${nvb_bin} init zsh)\"   # for zsh" >&2
+    echo "  eval \"\$(${nvb_bin} init bash)\"  # for bash" >&2
     return 1
   fi
 
@@ -293,8 +295,7 @@ nvb_cmd_setup() {
     bash) rc_file="$HOME/.bashrc" ;;
   esac
 
-  # shellcheck disable=SC2016
-  local hook_line='eval "$(nvb init '"${shell_name}"')"'
+  local hook_line="eval \"\$(${nvb_bin} init ${shell_name})\""
   local marker="# node-version-bridge:hook"
 
   # Check if already configured (new or legacy format)
@@ -349,8 +350,8 @@ Supported managers: nvm, fnm, mise, asdf, n
 
 Shell integration:
   nvb setup                    Auto-configure (recommended, run once)
-  eval "$(nvb init zsh)"       Manual — add to ~/.zshrc
-  eval "$(nvb init bash)"      Manual — add to ~/.bashrc
+  eval "\$(nvb init zsh)"       Manual — add to ~/.zshrc
+  eval "\$(nvb init bash)"      Manual — add to ~/.bashrc
 
 Environment variables:
   NVB_MANAGER          Force a specific version manager (nvm, fnm, mise, asdf, n)

@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.2] - 2026-03-16
+
+### Fixed
+
+- **Critical: nvb disappears after version switch on asdf/mise**: When installed via npm, the hook used bare `nvb` calls that went through asdf shims. After switching Node versions, the shim could no longer find `nvb`. The hook now pins the absolute path to the `nvb` binary at init time, so it survives version switches.
+- **Help text executed init code**: `nvb help` used an unquoted heredoc that expanded `$(nvb init zsh)` instead of displaying it as text.
+
 ## [0.6.1] - 2026-03-13
 
 ### Fixed
